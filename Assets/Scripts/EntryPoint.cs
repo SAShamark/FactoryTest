@@ -2,15 +2,20 @@ using UnityEngine;
 
 public class EntryPoint : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private GameManager _gameManager;
+
+    private void Awake()
     {
-        
+        _gameManager.Initialize();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDestroy()
     {
-        
+        _gameManager.Dispose();
+    }
+
+    private void LateUpdate()
+    {
+        _gameManager.LateUpdate();
     }
 }

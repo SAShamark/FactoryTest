@@ -1,14 +1,22 @@
+using Gameplay.Entities.BaseUnit;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Gameplay.Character
+namespace Gameplay.Entities.Character
 {
-    public class CharacterControl : MonoBehaviour
+    public class CharacterControl : BaseUnitControl
     {
         [SerializeField] private Camera _camera;
         [SerializeField] private Transform _turret;
         [SerializeField] private MovementLogic _movementLogic;
         [SerializeField] private TurretAimLogic _turretAimLogic;
+        [SerializeField] private TurretShooter _turretShooter;
+
+        private void Start()
+        {
+            InitializeUnit();
+            _turretShooter.Initialize();
+        }
 
         private void Update()
         {
@@ -18,6 +26,11 @@ namespace Gameplay.Character
                 _turretAimLogic.SetTarget(transform, aimPoint);
 
             _turretAimLogic.Tick(transform, _turret, Time.deltaTime);
+        }
+
+        private void LateUpdate()
+        {
+            _turretShooter.LateUpdate();
         }
 
         private bool TryGetAimPoint(out Vector3 aimPoint)
@@ -39,6 +52,11 @@ namespace Gameplay.Character
 
             aimPoint = ray.GetPoint(distance);
             return true;
+        }
+
+        protected override void Die()
+        {
+            MarkAsDead();
         }
     }
 }

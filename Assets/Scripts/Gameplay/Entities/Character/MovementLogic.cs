@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Gameplay.Character
+namespace Gameplay.Entities.Character
 {
     [Serializable]
     public class MovementLogic

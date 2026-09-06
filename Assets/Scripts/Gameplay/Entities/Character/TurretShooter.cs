@@ -1,10 +1,11 @@
+using System;
 using Services.ObjectPool;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
-namespace Gameplay.Character
+namespace Gameplay.Entities.Character
 {
-    public class TurretShooter : MonoBehaviour
+    [Serializable]
+    public class TurretShooter
     {
         [SerializeField] private Transform _turret;
         [SerializeField] private Projectile _projectilePrefab;
@@ -16,26 +17,22 @@ namespace Gameplay.Character
         private ObjectPool<Projectile> _projectilePool;
         private float _nextShotTime;
 
-        private void Awake()
+        public void Initialize()
         {
-            _projectilePool = new ObjectPool<Projectile>(
-                _projectilePrefab,
-                _initialPoolSize,
-                _projectileContainer);
+            _projectilePool = new ObjectPool<Projectile>(_projectilePrefab, _initialPoolSize, _projectileContainer);
         }
 
-        private void LateUpdate()
+        public void LateUpdate()
         {
-            Pointer pointer = Pointer.current;
-            if (pointer == null || !pointer.press.isPressed)
+            if (Time.timeScale <= 0f || _projectilePool == null)
                 return;
 
             Fire();
         }
 
-        public void Fire()
+        private void Fire()
         {
-            if (Time.time < _nextShotTime)
+            if (Time.time < _nextShotTime || _shotsPerSecond <= 0f)
                 return;
 
             _nextShotTime = Time.time + 1f / _shotsPerSecond;
