@@ -14,7 +14,6 @@ namespace Gameplay.Entities.Character
 
         public void Launch(Vector3 position, Quaternion rotation)
         {
-            transform.SetParent(null, true);
             transform.SetPositionAndRotation(position, rotation);
             _remainingLifetime = _lifetime;
         }

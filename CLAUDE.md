@@ -22,6 +22,7 @@ Before implementing:
 - No abstractions for single-use code.
 - No "flexibility" or "configurability" that wasn't requested.
 - No error handling for impossible scenarios.
+- No explanatory comments. If code needs narration, rename or split it. Comment only when the *why* cannot live in code at all - a workaround, an external constraint, a spec quirk.
 - If you write 200 lines and it could be 50, rewrite it.
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.

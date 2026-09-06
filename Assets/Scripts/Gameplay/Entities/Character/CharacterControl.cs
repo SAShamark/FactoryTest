@@ -12,6 +12,8 @@ namespace Gameplay.Entities.Character
         [SerializeField] private TurretAimLogic _turretAimLogic;
         [SerializeField] private TurretShooter _turretShooter;
 
+        public float TravelledDistance => _movementLogic.Distance;
+
         private void Start()
         {
             InitializeUnit();
@@ -41,7 +43,6 @@ namespace Gameplay.Entities.Character
             if (pointer == null)
                 return false;
 
-            // A mouse always has a position, a finger only while it touches the screen.
             if (pointer is Touchscreen && !pointer.press.isPressed)
                 return false;
 

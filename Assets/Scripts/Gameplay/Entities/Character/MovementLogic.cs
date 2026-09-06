@@ -13,23 +13,31 @@ namespace Gameplay.Entities.Character
         private float _distance;
         private float _lateral;
 
+        public float Distance => _distance;
+
         public void Tick(Transform body, float deltaTime)
         {
             _distance += _speed * deltaTime;
 
-            // Perlin noise never leaves 0..1, so the offset stays inside the amplitude
-            // and the car cannot wander off the road no matter how long it drives.
             float previousLateral = _lateral;
-            _lateral = (Mathf.PerlinNoise(_distance * _swayFrequency, 0f) * 2f - 1f) * _swayAmplitude;
+            _lateral = SampleLateral();
 
             float lateralDelta = _lateral - previousLateral;
             float forwardDelta = _speed * deltaTime;
             body.position += new Vector3(lateralDelta, 0f, forwardDelta);
 
-            // The body faces wherever it actually travels, so the yaw can never
-            // disagree with the movement.
             float yaw = Mathf.Atan2(lateralDelta, forwardDelta) * Mathf.Rad2Deg;
             body.rotation = Quaternion.Euler(0f, yaw, 0f);
+        }
+
+        private float SampleLateral()
+        {
+            float noiseCoordinate = _distance * _swayFrequency;
+            float noise = Mathf.PerlinNoise(noiseCoordinate, 0f) * 2f - 1f;
+
+            float fadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(noiseCoordinate));
+
+            return noise * _swayAmplitude * fadeIn;
         }
     }
 

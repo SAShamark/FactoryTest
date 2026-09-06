@@ -19,6 +19,8 @@ namespace Gameplay.Entities.Character
 
         public void Initialize()
         {
+            _projectileContainer.SetParent(null, true);
+
             _projectilePool = new ObjectPool<Projectile>(_projectilePrefab, _initialPoolSize, _projectileContainer);
         }
 

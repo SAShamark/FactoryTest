@@ -31,8 +31,6 @@ namespace Gameplay
             if (_target.position.z - rearmost.position.z < _segmentLength)
                 return;
 
-            // The segment the target has left behind jumps to the head of the queue,
-            // so the same few objects keep serving an endless road.
             rearmost.position += Vector3.forward * (_segmentCount * _segmentLength);
             _rearIndex = (_rearIndex + 1) % _segmentCount;
         }
