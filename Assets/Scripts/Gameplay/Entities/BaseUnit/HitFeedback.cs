@@ -1,13 +1,16 @@
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Gameplay.Entities.BaseUnit
 {
-    public class HitFeedback : MonoBehaviour
+    [Serializable]
+    public class HitFeedback
     {
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-        private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private readonly int ColorId = Shader.PropertyToID("_Color");
 
         [SerializeField] private Transform _visualRoot;
         [SerializeField] private Transform _hitEffect;
@@ -27,11 +30,15 @@ namespace Gameplay.Entities.BaseUnit
         private ParticleSystem _hitParticleSystem;
         private Tween _flashTween;
         private Tween _pulseTween;
+        private Tween _darkenTween;
         private float _flashAmount;
         private Vector3 _defaultVisualScale;
 
-        private void Awake()
+        public void Initialize()
         {
+            if (_visualRoot == null)
+                return;
+
             _defaultVisualScale = _visualRoot.localScale;
 
             Renderer[] renderers = _visualRoot.GetComponentsInChildren<Renderer>(true);
@@ -57,24 +64,31 @@ namespace Gameplay.Entities.BaseUnit
                 _defaultColors[i] = _materials[i].GetColor(_colorPropertyIds[i]);
             }
 
-            _hitParticleSystem = _hitEffect.GetComponent<ParticleSystem>();
-            _hitParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            if (_hitEffect != null)
+            {
+                _hitParticleSystem = _hitEffect.GetComponent<ParticleSystem>();
+                _hitParticleSystem?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
         }
 
         public void Play(Vector3 hitPosition)
         {
-            _hitEffect.position = hitPosition;
-            _hitParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            _hitParticleSystem.Play(true);
+            if (_visualRoot == null || _materials == null)
+                return;
+
+            if (_hitEffect != null && _hitParticleSystem != null)
+            {
+                _hitEffect.position = hitPosition;
+                _hitParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                _hitParticleSystem.Play(true);
+            }
 
             _flashTween?.Kill();
             _flashTween = DOTween.Sequence()
                 .Append(DOTween.To(() => _flashAmount, SetFlashAmount, 1f, _flashInDuration)
                     .SetEase(Ease.OutQuad))
                 .Append(DOTween.To(() => _flashAmount, SetFlashAmount, 0f, _flashOutDuration)
-                    .SetEase(Ease.InQuad))
-                .OnComplete(() => _flashTween = null)
-                .SetLink(gameObject);
+                    .SetEase(Ease.InQuad)).OnComplete(() => _flashTween = null).SetLink(_visualRoot.gameObject);
 
             _pulseTween?.Kill();
             _pulseTween = DOTween.Sequence()
@@ -83,9 +97,21 @@ namespace Gameplay.Entities.BaseUnit
                         _pulseInDuration)
                     .SetEase(Ease.OutQuad))
                 .Append(_visualRoot.DOScale(_defaultVisualScale, _pulseOutDuration)
-                    .SetEase(Ease.InOutQuad))
-                .OnComplete(() => _pulseTween = null)
-                .SetLink(gameObject);
+                    .SetEase(Ease.InOutQuad)).OnComplete(() => _pulseTween = null).SetLink(_visualRoot.gameObject);
+        }
+
+        public void Reset()
+        {
+            if (_visualRoot == null || _materials == null)
+                return;
+
+            _flashTween?.Kill();
+            _pulseTween?.Kill();
+            _darkenTween?.Kill();
+
+            _flashAmount = 0f;
+            _visualRoot.localScale = _defaultVisualScale;
+            ApplyColors();
         }
 
         private void SetFlashAmount(float amount)
@@ -102,14 +128,50 @@ namespace Gameplay.Entities.BaseUnit
             }
         }
 
-        private void OnDestroy()
+        public void Darken(float brightness, float duration)
+        {
+            if (_visualRoot == null || _materials == null)
+                return;
+
+            _flashTween?.Kill();
+            _darkenTween?.Kill();
+
+            float clampedBrightness = Mathf.Clamp01(brightness);
+            Sequence sequence = DOTween.Sequence();
+
+            for (int i = 0; i < _materials.Length; i++)
+            {
+                Material material = _materials[i];
+                int propertyId = _colorPropertyIds[i];
+                Color targetColor = _defaultColors[i] * clampedBrightness;
+                targetColor.a = _defaultColors[i].a;
+
+                sequence.Join(DOTween.To(
+                    () => material.GetColor(propertyId),
+                    color => material.SetColor(propertyId, color),
+                    targetColor,
+                    duration));
+            }
+
+            _darkenTween = sequence
+                .SetEase(Ease.OutQuad)
+                .SetUpdate(true)
+                .SetLink(_visualRoot.gameObject)
+                .OnComplete(() => _darkenTween = null);
+        }
+
+        public void Dispose()
         {
             _flashTween?.Kill();
             _pulseTween?.Kill();
+            _darkenTween?.Kill();
+
+            if (_materials == null)
+                return;
 
             foreach (var material in _materials)
             {
-                Destroy(material);
+                Object.Destroy(material);
             }
         }
     }

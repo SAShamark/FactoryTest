@@ -44,8 +44,7 @@ namespace UI
         public void ShowFinished()
         {
             _playButton.gameObject.SetActive(false);
-            _pauseButton.gameObject.SetActive(false);
-            _continueButton.gameObject.SetActive(false);
+            _pauseButton.gameObject.SetActive(true);
         }
 
         private void Play()

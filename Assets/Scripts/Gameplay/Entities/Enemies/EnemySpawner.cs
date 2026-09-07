@@ -20,8 +20,25 @@ namespace Gameplay.Entities.Enemies
         private ObjectPool<EnemyControl> _enemyPool;
         private bool _isInitialized;
         private bool _isSpawning;
+        private bool _hasSpawnLimit;
+        private float _maxSpawnZ;
         private float _elapsedSeconds;
         private float _spawnTimer;
+
+        public bool HasAliveEnemies
+        {
+            get
+            {
+                for (int i = 0; i < _aliveEnemies.Count; i++)
+                {
+                    EnemyControl enemy = _aliveEnemies[i];
+                    if (enemy != null && enemy.gameObject.activeSelf && enemy.IsAlive)
+                        return true;
+                }
+
+                return false;
+            }
+        }
 
         public void Initialize()
         {
@@ -54,16 +71,63 @@ namespace Gameplay.Entities.Enemies
             _isSpawning = false;
         }
 
+        public void SetSpawnLimit(float finishZ, float safeZoneDistance)
+        {
+            _maxSpawnZ = finishZ - Mathf.Max(0f, safeZoneDistance);
+            _hasSpawnLimit = true;
+        }
+
+        public void StopAndDespawnAllEnemies()
+        {
+            StopSpawn();
+            DespawnAllEnemies();
+        }
+
+        public void BeginSurroundingTarget()
+        {
+            StopSpawn();
+            CleanupInactiveEnemies();
+
+            int enemyCount = _aliveEnemies.Count;
+            if (enemyCount == 0 || _target == null || _config == null)
+                return;
+
+            float angleStep = 360f / enemyCount;
+            float angleOffset = Random.Range(0f, 360f);
+
+            for (int i = 0; i < enemyCount; i++)
+            {
+                float angle = angleOffset + angleStep * i;
+                float radius = _config.GetDeathSurroundRadius();
+                Vector3 offset = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * radius;
+                _aliveEnemies[i].BeginSurrounding(offset);
+            }
+        }
+
         internal void LateUpdate()
         {
             if (!_isSpawning || _config == null || _target == null || _enemyPool == null)
                 return;
+
+            if (HasNoSpawnSpace())
+            {
+                StopSpawn();
+                return;
+            }
 
             _elapsedSeconds += Time.deltaTime;
 
             CleanupInactiveEnemies();
             DespawnEnemiesBehindTarget();
             TickSpawning();
+        }
+
+        private bool HasNoSpawnSpace()
+        {
+            if (!_hasSpawnLimit)
+                return false;
+
+            return _target.position.z + _config.MinimumSpawnAheadDistance >= _maxSpawnZ;
         }
 
         private void TickSpawning()
@@ -103,6 +167,8 @@ namespace Gameplay.Entities.Enemies
                 _config.ContactDistance,
                 _config.ContactDamage,
                 _config.MoveSpeed,
+                _config.CatchUpDistanceBehindTarget,
+                _config.CatchUpMoveSpeed,
                 _config.RotationSpeed);
             _aliveEnemies.Add(enemy);
         }
@@ -114,6 +180,12 @@ namespace Gameplay.Entities.Enemies
             float z = _target.position.z + _config.SpawnDistance;
             z += Random.Range(-_config.SpawnDistanceJitter, _config.SpawnDistanceJitter);
             z += waveIndex * _config.ForwardSpacingInWave;
+
+            if (_hasSpawnLimit)
+            {
+                float waveMaxZ = _maxSpawnZ - waveIndex * _config.ForwardSpacingInWave;
+                z = Mathf.Min(z, waveMaxZ);
+            }
 
             return new Vector3(x, _config.SpawnY, z);
         }

@@ -10,7 +10,7 @@ public class GameManager : IDisposable
 {
     [SerializeField] private GameplayManager _gameplayManager;
     [SerializeField] private UIManager _uiManager;
-    [SerializeField] private IntroSequence _introSequence;
+    [SerializeField] private CutsceneManager _cutsceneManager;
 
     private bool _hasStarted;
     private bool _gameplayStarted;
@@ -19,8 +19,9 @@ public class GameManager : IDisposable
     {
         _gameplayManager.Initialize();
         _uiManager.Initialize();
-        if (_introSequence != null)
-            _introSequence.Initialize();
+        _cutsceneManager.Initialize();
+
+        _cutsceneManager.Completed += StartGameplay;
 
         _uiManager.OnPlay += Play;
         _uiManager.OnPause += Pause;
@@ -33,6 +34,8 @@ public class GameManager : IDisposable
 
     internal void LateUpdate()
     {
+        _cutsceneManager.LateUpdate();
+
         if (!_gameplayStarted)
             return;
 
@@ -46,12 +49,20 @@ public class GameManager : IDisposable
             return;
 
         _hasStarted = true;
-        if (_introSequence != null)
+        if (_cutsceneManager != null)
         {
             _uiManager.ShowIntro();
-            _introSequence.Play();
+            _cutsceneManager.Play();
             return;
         }
+
+        StartGameplay();
+    }
+
+    public void StartGameplay()
+    {
+        if (_gameplayStarted)
+            return;
 
         _gameplayStarted = true;
         _gameplayManager.StartGameplay();
@@ -79,6 +90,8 @@ public class GameManager : IDisposable
 
     public void Dispose()
     {
+        _cutsceneManager.Completed -= StartGameplay;
+
         _uiManager.OnPlay -= Play;
         _uiManager.OnPause -= Pause;
         _uiManager.OnContinue -= Continue;

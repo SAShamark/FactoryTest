@@ -29,6 +29,7 @@ namespace Gameplay.Enemies
         [SerializeField, Min(0f)] private float _spawnDistance = 42f;
         [SerializeField, Min(0f)] private float _spawnDistanceJitter = 8f;
         [SerializeField, Min(0f)] private float _forwardSpacingInWave = 3f;
+        [SerializeField, Min(0f)] private float _minimumSpawnAheadDistance = 8f;
         [SerializeField, Min(0f)] private float _despawnDistanceBehindTarget = 14f;
         [SerializeField] private float _spawnY = 0f;
         [SerializeField] private float _enemyYaw = 180f;
@@ -36,17 +37,24 @@ namespace Gameplay.Enemies
         [Header("Chase")]
         [SerializeField, Min(0f)] private float _activationDistance = 18f;
         [SerializeField, Min(0f)] private float _moveSpeed = 5.5f;
+        [SerializeField, Min(0f)] private float _catchUpDistanceBehindTarget = 1.5f;
+        [SerializeField, Min(0f)] private float _catchUpMoveSpeed = 11f;
         [SerializeField, Min(0f)] private float _rotationSpeed = 360f;
 
         [Header("Contact Damage")]
         [SerializeField, Min(0f)] private float _contactDistance = 1.4f;
-        [SerializeField, Min(0f)] private float _contactDamage = 25f;
+        [SerializeField, Min(0f)] private float _contactDamage = 15f;
+
+        [Header("Death Sequence")]
+        [SerializeField, Min(0f)] private float _deathSurroundRadius = 2.6f;
+        [SerializeField, Min(0f)] private float _deathSurroundRadiusJitter = 0.45f;
 
         public int InitialPoolSize => _initialPoolSize;
         public float InitialDelay => _initialDelay;
         public float SpawnDistance => _spawnDistance;
         public float SpawnDistanceJitter => _spawnDistanceJitter;
         public float ForwardSpacingInWave => _forwardSpacingInWave;
+        public float MinimumSpawnAheadDistance => _minimumSpawnAheadDistance;
         public float DespawnDistanceBehindTarget => _despawnDistanceBehindTarget;
         public float SpawnY => _spawnY;
         public float EnemyYaw => _enemyYaw;
@@ -54,8 +62,16 @@ namespace Gameplay.Enemies
         public float ContactDistance => _contactDistance;
         public float ContactDamage => _contactDamage;
         public float MoveSpeed => _moveSpeed;
+        public float CatchUpDistanceBehindTarget => _catchUpDistanceBehindTarget;
+        public float CatchUpMoveSpeed => _catchUpMoveSpeed;
         public float RotationSpeed => _rotationSpeed;
         public int LaneCount => Mathf.Max(1, _laneCount);
+
+        public float GetDeathSurroundRadius()
+        {
+            return Mathf.Max(0f, _deathSurroundRadius
+                + Random.Range(-_deathSurroundRadiusJitter, _deathSurroundRadiusJitter));
+        }
 
         public float GetSpawnInterval(float elapsedSeconds)
         {

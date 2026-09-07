@@ -24,6 +24,7 @@ namespace Gameplay.Entities.BaseUnit
             _currentHealth = _maxHealth;
             _isDead = false;
             _healthBarView.Init(NormalizedHealth);
+            _healthBarView.gameObject.SetActive(true);
             OnHealthChanged?.Invoke(NormalizedHealth);
         }
 

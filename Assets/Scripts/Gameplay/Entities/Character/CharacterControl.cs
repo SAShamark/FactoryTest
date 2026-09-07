@@ -11,18 +11,24 @@ namespace Gameplay.Entities.Character
         [SerializeField] private MovementLogic _movementLogic;
         [SerializeField] private TurretAimLogic _turretAimLogic;
         [SerializeField] private TurretShooter _turretShooter;
+        [SerializeField] private CharacterEffects _characterEffects;
+
+        protected override HitFeedback HitFeedback => _characterEffects.HitFeedback;
+
+        private bool _isMoving;
+        private bool _isShooting;
 
         public float TravelledDistance => _movementLogic.Distance;
 
         private void Start()
         {
-            InitializeUnit();
             _turretShooter.Initialize();
         }
 
         private void Update()
         {
-            _movementLogic.Tick(transform, Time.deltaTime);
+            if (_isMoving)
+                _movementLogic.Tick(transform, Time.deltaTime);
 
             if (TryGetAimPoint(out Vector3 aimPoint))
                 _turretAimLogic.SetTarget(transform, aimPoint);
@@ -32,7 +38,41 @@ namespace Gameplay.Entities.Character
 
         private void LateUpdate()
         {
-            _turretShooter.LateUpdate();
+            if (_isShooting)
+                _turretShooter.LateUpdate();
+        }
+
+        public void StartMoving()
+        {
+            _isMoving = true;
+            InitializeUnit();
+        }
+
+        public void StartShooting()
+        {
+            _isShooting = true;
+        }
+
+        public void StopGameplay()
+        {
+            _isMoving = false;
+            _isShooting = false;
+        }
+
+        public void StopShooting()
+        {
+            _isShooting = false;
+        }
+
+        public void BeginFinishAlignment(float targetX, float alignmentDistance)
+        {
+            _movementLogic.BeginFinishAlignment(transform, targetX, alignmentDistance);
+        }
+
+        public override void PlayHitFeedback(Vector3 hitPosition)
+        {
+            base.PlayHitFeedback(hitPosition);
+            _characterEffects.PlayDamageShake(hitPosition);
         }
 
         private bool TryGetAimPoint(out Vector3 aimPoint)
@@ -57,7 +97,9 @@ namespace Gameplay.Entities.Character
 
         protected override void Die()
         {
+            StopGameplay();
             MarkAsDead();
+            _characterEffects.Die();
         }
     }
 }

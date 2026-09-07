@@ -4,23 +4,25 @@ using UnityEngine.Playables;
 
 namespace Gameplay.Intro
 {
-    [RequireComponent(typeof(PlayableDirector))]
-    public sealed class IntroSequence : MonoBehaviour
+    [Serializable]
+    public class CutsceneManager
     {
         [SerializeField] private PlayableDirector _director;
         [SerializeField] private Animator _actor;
+        [SerializeField] private CameraController _cameraController;
 
         private bool _hasStarted;
+        private bool _hasCompleted;
+
         public event Action Completed;
 
         public void Initialize()
         {
             _hasStarted = false;
+            _hasCompleted = false;
             _director.playOnAwake = false;
             _director.timeUpdateMode = DirectorUpdateMode.UnscaledGameTime;
             _director.extrapolationMode = DirectorWrapMode.None;
-            _director.stopped -= HandleStopped;
-            _director.stopped += HandleStopped;
             _actor.gameObject.SetActive(true);
             _actor.applyRootMotion = false;
             _actor.updateMode = AnimatorUpdateMode.UnscaledTime;
@@ -34,24 +36,22 @@ namespace Gameplay.Intro
                 return;
 
             _hasStarted = true;
+            _cameraController.ActivateCutsceneCamera();
             _director.time = 0d;
             _director.Play();
         }
 
-        private void HandleStopped(PlayableDirector director)
+        internal void LateUpdate()
         {
-            if (!_hasStarted)
+            if (!_hasStarted || _hasCompleted)
                 return;
 
-            // Movement and visibility are authored on Timeline. Further intro steps
-            // can subscribe here; completing this first section does not start driving.
-            Completed?.Invoke();
-        }
+            if (_director.state == PlayState.Playing && _director.time < _director.duration)
+                return;
 
-        private void OnDestroy()
-        {
-            if (_director != null)
-                _director.stopped -= HandleStopped;
+            _hasCompleted = true;
+            _cameraController.ActivateGameplayCamera();
+            Completed?.Invoke();
         }
     }
 }

@@ -18,4 +18,9 @@ public class EntryPoint : MonoBehaviour
     {
         _gameManager.LateUpdate();
     }
+
+    public void StartGameplay()
+    {
+        _gameManager.StartGameplay();
+    }
 }

@@ -53,7 +53,6 @@ namespace Gameplay.Entities.BaseUnit
 
         public void Init(float healthFill)
         {
-            gameObject.SetActive(true);
             SetFillAmount(healthFill);
         }
 

@@ -11,7 +11,7 @@ namespace Gameplay.Entities.Character
         [SerializeField] private Projectile _projectilePrefab;
         [SerializeField] private Transform _projectileContainer;
         [SerializeField] private int _initialPoolSize = 12;
-        [SerializeField] private float _shotsPerSecond = 5f;
+        [SerializeField] private float _shotsPerSecond = 8f;
         [SerializeField] private float _muzzleDistance = 1.5f;
 
         private ObjectPool<Projectile> _projectilePool;

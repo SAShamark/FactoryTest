@@ -12,28 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fa6efcae5dc4e31857326591d2b4d59, type: 3}
   m_Name: EnemySpawnerConfig
   m_EditorClassIdentifier:
-  _initialPoolSize: 72
+  _initialPoolSize: 36
   _initialDelay: 0.75
   _startSpawnInterval: 1.35
   _minSpawnInterval: 0.45
   _spawnIntervalDecreasePerMinute: 0.25
-  _startSpawnCount: 4
-  _maxSpawnCount: 16
+  _startSpawnCount: 2
+  _maxSpawnCount: 8
   _spawnCountIncreaseEverySeconds: 30
-  _startMaxAliveEnemies: 32
-  _maxAliveEnemies: 96
-  _maxAliveIncreasePerMinute: 16
+  _startMaxAliveEnemies: 16
+  _maxAliveEnemies: 48
+  _maxAliveIncreasePerMinute: 8
   _laneCount: 3
   _roadHalfWidth: 3.5
   _laneJitter: 0.35
   _spawnDistance: 42
   _spawnDistanceJitter: 8
   _forwardSpacingInWave: 3
+  _minimumSpawnAheadDistance: 8
   _despawnDistanceBehindTarget: 14
   _spawnY: 0
   _enemyYaw: 180
   _activationDistance: 18
   _moveSpeed: 5.5
+  _catchUpDistanceBehindTarget: 1.5
+  _catchUpMoveSpeed: 11
   _rotationSpeed: 360
   _contactDistance: 1.4
-  _contactDamage: 25
+  _contactDamage: 15
+  _deathSurroundRadius: 2.6
+  _deathSurroundRadiusJitter: 0.45

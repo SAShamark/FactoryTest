@@ -12,6 +12,12 @@ namespace Gameplay.Entities.Character
 
         private float _distance;
         private float _lateral;
+        private bool _isFinishAlignmentActive;
+        private bool _isFinishAligned;
+        private float _alignmentStartDistance;
+        private float _alignmentDistance;
+        private float _alignmentStartX;
+        private float _alignmentTargetX;
 
         public float Distance => _distance;
 
@@ -19,15 +25,52 @@ namespace Gameplay.Entities.Character
         {
             _distance += _speed * deltaTime;
 
-            float previousLateral = _lateral;
-            _lateral = SampleLateral();
+            float targetX = GetTargetX();
 
-            float lateralDelta = _lateral - previousLateral;
+            float lateralDelta = targetX - body.position.x;
             float forwardDelta = _speed * deltaTime;
             body.position += new Vector3(lateralDelta, 0f, forwardDelta);
 
             float yaw = Mathf.Atan2(lateralDelta, forwardDelta) * Mathf.Rad2Deg;
             body.rotation = Quaternion.Euler(0f, yaw, 0f);
+        }
+
+        public void BeginFinishAlignment(Transform body, float targetX, float alignmentDistance)
+        {
+            if (_isFinishAlignmentActive || _isFinishAligned)
+                return;
+
+            _isFinishAlignmentActive = true;
+            _alignmentStartDistance = _distance;
+            _alignmentDistance = Mathf.Max(0.01f, alignmentDistance);
+            _alignmentStartX = body.position.x;
+            _alignmentTargetX = targetX;
+        }
+
+        private float GetTargetX()
+        {
+            if (_isFinishAligned)
+                return _alignmentTargetX;
+
+            if (!_isFinishAlignmentActive)
+            {
+                _lateral = SampleLateral();
+                return _lateral;
+            }
+
+            float progress = Mathf.Clamp01(
+                (_distance - _alignmentStartDistance) / _alignmentDistance);
+            float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
+            float targetX = Mathf.Lerp(_alignmentStartX, _alignmentTargetX, easedProgress);
+
+            if (progress >= 1f)
+            {
+                _isFinishAlignmentActive = false;
+                _isFinishAligned = true;
+                targetX = _alignmentTargetX;
+            }
+
+            return targetX;
         }
 
         private float SampleLateral()
@@ -38,31 +81,6 @@ namespace Gameplay.Entities.Character
             float fadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(noiseCoordinate));
 
             return noise * _swayAmplitude * fadeIn;
-        }
-    }
-
-    [Serializable]
-    public class TurretAimLogic
-    {
-        [SerializeField] private float _rotationSpeed = 240f;
-        [SerializeField] private float _maxAngle = 75f;
-
-        private float _targetAngle;
-        private float _angle;
-
-        public float Angle => _angle;
-
-        public void SetTarget(Transform body, Vector3 aimPoint)
-        {
-            Vector3 localPoint = body.InverseTransformPoint(aimPoint);
-            float angle = Mathf.Atan2(localPoint.x, localPoint.z) * Mathf.Rad2Deg;
-            _targetAngle = Mathf.Clamp(angle, -_maxAngle, _maxAngle);
-        }
-
-        public void Tick(Transform body, Transform turret, float deltaTime)
-        {
-            _angle = Mathf.MoveTowardsAngle(_angle, _targetAngle, _rotationSpeed * deltaTime);
-            turret.rotation = body.rotation * Quaternion.Euler(0f, _angle, 0f);
         }
     }
 }
