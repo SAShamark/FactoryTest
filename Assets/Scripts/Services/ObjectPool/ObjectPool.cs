@@ -7,10 +7,12 @@ namespace Services.ObjectPool
     {
         void ReturnToPool(GameObject go);
     }
-    public class ObjectPool<T> : IObjectPool where T : Component    {
+
+    public class ObjectPool<T> : IObjectPool where T : Component
+    {
         private T _prefab;
         private Transform _container;
-        
+
         private List<T> _includedPool = new();
         private List<T> _excludedPool = new();
 
@@ -26,7 +28,7 @@ namespace Services.ObjectPool
         {
             _excludedPool.Clear();
             _includedPool.Clear();
-            
+
             for (int i = 0; i < count; i++)
             {
                 CreateElement();
@@ -69,7 +71,7 @@ namespace Services.ObjectPool
             {
                 T cachedElement = _excludedPool[0];
                 element = cachedElement;
-                
+
                 cachedElement.gameObject.SetActive(true);
                 _includedPool.Add(cachedElement);
                 _excludedPool.RemoveAt(0);
@@ -102,7 +104,7 @@ namespace Services.ObjectPool
             {
                 return element;
             }
-            
+
             return CreateElement(true);
         }
     }

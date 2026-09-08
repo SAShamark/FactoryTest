@@ -35,10 +35,8 @@ namespace Gameplay.Entities
                 return;
 
             _doorTween?.Kill();
-            _doorTween = _door.DOLocalMove(targetPosition, duration)
-                .SetEase(ease)
-                .SetLink(gameObject)
-                .OnComplete(() => _doorTween = null);
+            _doorTween = _door.DOLocalMove(targetPosition, duration).SetEase(ease)
+                .SetLink(gameObject).OnComplete(() => _doorTween = null);
         }
 
         private void OnDestroy()

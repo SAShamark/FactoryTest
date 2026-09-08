@@ -1,5 +1,6 @@
 using System;
 using Services.ObjectPool;
+using Services.Sequence;
 using UnityEngine;
 
 namespace Gameplay.Entities.Character
@@ -15,10 +16,12 @@ namespace Gameplay.Entities.Character
         [SerializeField] private float _muzzleDistance = 1.5f;
 
         private ObjectPool<Projectile> _projectilePool;
+        private IGameplaySequence _gameplaySequence;
         private float _nextShotTime;
 
-        public void Initialize()
+        public void Initialize(IGameplaySequence gameplaySequence)
         {
+            _gameplaySequence = gameplaySequence;
             _projectileContainer.SetParent(null, true);
 
             _projectilePool = new ObjectPool<Projectile>(_projectilePrefab, _initialPoolSize, _projectileContainer);
@@ -26,7 +29,7 @@ namespace Gameplay.Entities.Character
 
         public void LateUpdate()
         {
-            if (Time.timeScale <= 0f || _projectilePool == null)
+            if (_gameplaySequence.TimeScale <= 0f || _projectilePool == null)
                 return;
 
             Fire();

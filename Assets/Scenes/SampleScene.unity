@@ -1225,6 +1225,7 @@ GameObject:
   m_Component:
   - component: {fileID: 910217076}
   - component: {fileID: 910217075}
+  - component: {fileID: 910217077}
   m_Layer: 0
   m_Name: SceneContext
   m_TagString: Untagged
@@ -1245,7 +1246,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _scriptableObjectInstallers: []
-  _monoInstallers: []
+  _monoInstallers:
+  - {fileID: 910217077}
   _installerPrefabs: []
   _autoRun: 1
   OnPreInstall:
@@ -1278,6 +1280,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &910217077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910217074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e4b6acdcf2c4f7baf5e9bbd6e7d6a31, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Services.Installers.GameplaySceneInstaller
+  _uiManager: {fileID: 1708532055}
 --- !u!1 &931388335
 GameObject:
   m_ObjectHideFlags: 0
@@ -1584,54 +1599,14 @@ MonoBehaviour:
       _character: {fileID: 557790186}
       _levelConfig: {fileID: 11400000, guid: fa43e88769de9dd4c82e0abf3e813e7b, type: 2}
       _environmentControl: {fileID: 1542968525}
-      _startRampDuration: 1.25
-      _startRampCurve:
-        serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-      _shootingDelay: 3
       _deathTimeScale: 0.2
       _deathSlowMotionDuration: 0.15
       _deathPresentationDuration: 2
       _cameraController: {fileID: 1795605206}
-      _victoryNoSpawnZoneDistance: 30
-      _finishAlignmentStartDistance: 30
-      _finishAlignmentDistance: 12
-      _gateOpenDistance: 22
-      _cameraFreezeDistance: 18
-      _victoryPresentationDuration: 2
-      _victoryExitViewportMargin: 0.15
-      _victoryMaximumDriveDuration: 5
-    _uiManager:
-      _gameplayScreen: {fileID: 1674055008}
-      _levelCompletedPopup: {fileID: 1372452131}
-      _resultPopup: {fileID: 296368757}
-      _currencyView: {fileID: 807023574}
     _cutsceneManager:
       _director: {fileID: 1424515403}
       _actor: {fileID: 2100000002}
       _cameraController: {fileID: 1795605206}
-    _currencyCollection: {fileID: 11400000, guid: fb0ab91a35881c742b133989e0a20b70, type: 2}
 --- !u!1 &1124958058 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7904135050062822674, guid: 020dbe244e414f445983f357c19e6491, type: 3}
@@ -2330,6 +2305,7 @@ GameObject:
   - component: {fileID: 1708532053}
   - component: {fileID: 1708532052}
   - component: {fileID: 1708532051}
+  - component: {fileID: 1708532055}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -2422,6 +2398,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1708532055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1708532050}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c91f7d76a34d7614e990fea2de610e93, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::UI.UIManager
+  _gameplayScreen: {fileID: 1674055008}
+  _levelCompletedPopup: {fileID: 1372452131}
+  _resultPopup: {fileID: 296368757}
 --- !u!1 &1764468813 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9124641895747957917, guid: 62029713ffdf5e848af8b784d64ff21d, type: 3}
@@ -2897,6 +2888,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8122339617051279735, guid: 5d2d3667c2b20484cb7328874478e29f, type: 3}
+      propertyPath: _currencyView
+      value:
+      objectReference: {fileID: 807023574}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

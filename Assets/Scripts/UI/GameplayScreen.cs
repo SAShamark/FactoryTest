@@ -9,7 +9,7 @@ namespace UI
     {
         [SerializeField] private Button _playButton;
         [SerializeField] private GameObject _afterLaunch;
-        
+        [SerializeField] private CurrencyView _currencyView;
         [SerializeField] private Button _pauseButton;
         [SerializeField] private Button _continueButton;
         [SerializeField] private TextMeshProUGUI _progressText;
@@ -17,9 +17,9 @@ namespace UI
 
         private int _displayedPercent = -1;
 
-        public event Action OnPlay;
-        public event Action OnPause;
-        public event Action OnContinue;
+        public event Action PlayRequested;
+        public event Action PauseRequested;
+        public event Action ContinueRequested;
 
         private void Awake()
         {
@@ -28,8 +28,16 @@ namespace UI
             _continueButton.onClick.AddListener(Continue);
         }
 
+        private void OnDestroy()
+        {
+            _playButton.onClick.RemoveListener(Play);
+            _pauseButton.onClick.RemoveListener(Pause);
+            _continueButton.onClick.RemoveListener(Continue);
+        }
+
         public void Initialize()
         {
+            _currencyView.Initialize();
             ShowBeforePlay();
         }
 
@@ -54,18 +62,18 @@ namespace UI
         private void Play()
         {
             ShowPlaying();
-            OnPlay?.Invoke();
+            PlayRequested?.Invoke();
         }
 
         private void Pause()
         {
-            OnPause?.Invoke();
+            PauseRequested?.Invoke();
             ShowPaused();
         }
 
         private void Continue()
         {
-            OnContinue?.Invoke();
+            ContinueRequested?.Invoke();
             ShowPlaying();
         }
 

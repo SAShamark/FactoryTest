@@ -44,7 +44,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38aae3df45af4958bd1f84cca64d7171, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _adsTestMode: 1
 --- !u!1 &2520196891568336177
 GameObject:
   m_ObjectHideFlags: 0
@@ -122,6 +121,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd12f099c17449f0837524c811a08388, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _currencyCollection: {fileID: 11400000, guid: fb0ab91a35881c742b133989e0a20b70, type: 2}
 --- !u!1 &5700667900496720431
 GameObject:
   m_ObjectHideFlags: 0

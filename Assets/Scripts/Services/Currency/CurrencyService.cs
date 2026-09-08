@@ -1,30 +1,35 @@
 using System;
 using System.Collections.Generic;
 using Services.Storage;
-using UnityEngine;
 
 namespace Services.Currency
 {
-    public class CurrencyService
+    public class CurrencyService : IDisposable
     {
-        private StorageService _storageService;
+        private readonly StorageService _storageService;
+        private readonly Dictionary<string, int> _savedCurrencies;
         private readonly Dictionary<CurrencyType, IBank> _currencyBanks = new();
-        public event Action<CurrencyType, int> OnNotEnough;
-        public CurrencyCollection CurrencyCollection { get; private set; }
+        private readonly Dictionary<CurrencyType, Action<int>> _saveHandlers = new();
 
-        public void Init(StorageService storageService, CurrencyCollection currencyCollection)
+        public event Action<CurrencyType, int> OnNotEnough;
+        public CurrencyCollection CurrencyCollection { get; }
+
+        public CurrencyService(StorageService storageService, CurrencyCollection currencyCollection)
         {
             _storageService = storageService;
             CurrencyCollection = currencyCollection;
+            _savedCurrencies = _storageService.LoadData(
+                    StorageConstants.CURRENCIES,
+                    new Dictionary<string, int>())
+                ?? new Dictionary<string, int>();
             AddAllCurrencyBanks();
         }
 
         private void AddAllCurrencyBanks()
         {
-            var currencies = _storageService.LoadData(StorageConstants.CURRENCIES, new Dictionary<string, int>());
             foreach (CurrencyType currencyType in Enum.GetValues(typeof(CurrencyType)))
             {
-                int initialCurrency = currencies.GetValueOrDefault(currencyType.ToString(), 0);
+                int initialCurrency = _savedCurrencies.GetValueOrDefault(currencyType.ToString(), 0);
                 AddCurrencyBank(currencyType, initialCurrency);
             }
         }
@@ -32,9 +37,12 @@ namespace Services.Currency
         private void AddCurrencyBank(CurrencyType currencyType, int initialCurrency)
         {
             var bank = new CurrencyBank(currencyType, initialCurrency);
-            bank.OnCurrencyChanged += currency => SaveCurrency(currencyType, currency);
+            Action<int> saveHandler = value => SaveCurrency(currencyType, value);
+
+            bank.OnCurrencyChanged += saveHandler;
             bank.OnNotEnough += NotEnoughCurrency;
             _currencyBanks[currencyType] = bank;
+            _saveHandlers[currencyType] = saveHandler;
         }
 
         private void NotEnoughCurrency(CurrencyType type, int value) => OnNotEnough?.Invoke(type, value);
@@ -42,9 +50,8 @@ namespace Services.Currency
 
         private void SaveCurrency(CurrencyType currencyType, int value)
         {
-            var currencies = _storageService.LoadData(StorageConstants.CURRENCIES, new Dictionary<string, int>());
-            currencies[currencyType.ToString()] = value;
-            _storageService.SaveData(StorageConstants.CURRENCIES, currencies);
+            _savedCurrencies[currencyType.ToString()] = value;
+            _storageService.SaveData(StorageConstants.CURRENCIES, _savedCurrencies);
         }
 
         public IBank GetCurrencyByType(CurrencyType currencyType)
@@ -59,10 +66,18 @@ namespace Services.Currency
 
         public void Dispose()
         {
-            foreach (var bank in _currencyBanks)
+            foreach (KeyValuePair<CurrencyType, IBank> pair in _currencyBanks)
             {
-                bank.Value.OnNotEnough -= NotEnoughCurrency;
+                CurrencyType currencyType = pair.Key;
+                IBank bank = pair.Value;
+                bank.OnNotEnough -= NotEnoughCurrency;
+
+                if (_saveHandlers.TryGetValue(currencyType, out Action<int> saveHandler))
+                    bank.OnCurrencyChanged -= saveHandler;
             }
+
+            _saveHandlers.Clear();
+            _currencyBanks.Clear();
         }
     }
 }

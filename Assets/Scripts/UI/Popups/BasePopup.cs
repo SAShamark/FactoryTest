@@ -10,20 +10,23 @@ namespace UI.Popups
         public virtual void Show()
         {
             gameObject.SetActive(true);
-
-            if (_closeButton != null)
-            {
-                _closeButton.onClick.RemoveAllListeners();
-
-                _closeButton.onClick.AddListener(CloseTrigger);
-            }
-
-            Debug.Log($"{gameObject.name} popup showed");
         }
 
         public virtual void CloseTrigger()
         {
             gameObject.SetActive(false);
+        }
+
+        protected virtual void Awake()
+        {
+            if (_closeButton != null)
+                _closeButton.onClick.AddListener(CloseTrigger);
+        }
+
+        protected virtual void OnDestroy()
+        {
+            if (_closeButton != null)
+                _closeButton.onClick.RemoveListener(CloseTrigger);
         }
     }
 }

@@ -8,16 +8,23 @@ namespace UI.Popups
     {
         [SerializeField] private Button _button;
 
-        public event Action OnButtonClicked;
+        public event Action RestartRequested;
 
-        private void Start()
+        protected override void Awake()
         {
+            base.Awake();
             _button.onClick.AddListener(ButtonClicked);
+        }
+
+        protected override void OnDestroy()
+        {
+            _button.onClick.RemoveListener(ButtonClicked);
+            base.OnDestroy();
         }
 
         private void ButtonClicked()
         {
-            OnButtonClicked?.Invoke();
+            RestartRequested?.Invoke();
         }
     }
 }

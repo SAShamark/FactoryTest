@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Gameplay.Enemies;
 using Gameplay.Entities.BaseUnit;
 using Services.ObjectPool;
 using UnityEngine;
@@ -15,11 +14,11 @@ namespace Gameplay.Entities.Enemies
         [SerializeField] private Transform _target;
         [SerializeField] private EnemyControl _enemyPrefab;
         [SerializeField] private Transform _enemyContainer;
+        [SerializeField] private CameraController _cameraController;
 
         private readonly List<EnemyControl> _aliveEnemies = new();
         private readonly List<int> _availableLanes = new();
         private ObjectPool<EnemyControl> _enemyPool;
-        private Camera _viewCamera;
         private FloatingTextControl _floatingText;
         private bool _isInitialized;
         private bool _isSpawning;
@@ -62,6 +61,27 @@ namespace Gameplay.Entities.Enemies
 
             _spawnTimer = _config != null ? _config.InitialDelay : 0f;
             _isInitialized = true;
+        }
+
+        internal void LateUpdate()
+        {
+            if (_config == null || _target == null || _enemyPool == null)
+                return;
+
+            CleanupInactiveEnemies();
+            DespawnEnemiesBehindTarget();
+
+            if (!_isSpawning)
+                return;
+
+            if (HasNoSpawnSpace())
+            {
+                StopSpawn();
+                return;
+            }
+
+            _elapsedSeconds += Time.deltaTime;
+            TickSpawning();
         }
 
         public void StartSpawn(bool resetProgress = false)
@@ -117,27 +137,6 @@ namespace Gameplay.Entities.Enemies
             }
         }
 
-        internal void LateUpdate()
-        {
-            if (_config == null || _target == null || _enemyPool == null)
-                return;
-
-            CleanupInactiveEnemies();
-            DespawnEnemiesBehindTarget();
-
-            if (!_isSpawning)
-                return;
-
-            if (HasNoSpawnSpace())
-            {
-                StopSpawn();
-                return;
-            }
-
-            _elapsedSeconds += Time.deltaTime;
-            TickSpawning();
-        }
-
         private bool HasNoSpawnSpace()
         {
             if (!_hasSpawnLimit)
@@ -189,19 +188,7 @@ namespace Gameplay.Entities.Enemies
             EnemyControl enemy = _enemyPool.GetFreeElement();
             Quaternion rotation = Quaternion.Euler(0f, _config.EnemyYaw, 0f);
 
-            enemy.Spawn(
-                position,
-                rotation,
-                _target,
-                _config.ActivationDistance,
-                _config.ContactDamage,
-                _config.MoveSpeed,
-                _config.RotationSpeed,
-                _config.RoadHalfWidth,
-                _config.WanderSpeed,
-                _config.GetWanderPauseDuration(),
-                _config.GetWanderMoveDuration(),
-                _floatingText);
+            enemy.Spawn(position, rotation, _target, _config.Enemy, _floatingText);
             enemy.KilledByPlayer -= HandleEnemyKilled;
             enemy.KilledByPlayer += HandleEnemyKilled;
             _aliveEnemies.Add(enemy);
@@ -235,44 +222,45 @@ namespace Gameplay.Entities.Enemies
             }
 
             position = new Vector3(x, _config.SpawnY, z);
-            return MoveSpawnOutsideCameraView(ref position, maxSpawnZ);
+
+            if (!TryGetHiddenSpawnZ(position, maxSpawnZ, out float hiddenZ))
+                return false;
+
+            position.z = hiddenZ;
+            return true;
         }
 
-        private bool MoveSpawnOutsideCameraView(ref Vector3 position, float maxSpawnZ)
+        private bool TryGetHiddenSpawnZ(Vector3 position, float maxSpawnZ, out float hiddenZ)
         {
-            Camera viewCamera = GetViewCamera();
+            hiddenZ = position.z;
+
+            Camera viewCamera = _cameraController != null ? _cameraController.OutputCamera : null;
             if (viewCamera == null)
                 return true;
 
             float padding = _config.SpawnViewportPadding;
-            const float step = 1f;
+            Vector3 viewportPosition = viewCamera.WorldToViewportPoint(position);
 
-            for (int i = 0; i < 64; i++)
-            {
-                Vector3 viewportPosition = viewCamera.WorldToViewportPoint(position);
-                bool isVisible = viewportPosition.z > 0f
-                    && viewportPosition.x >= -padding && viewportPosition.x <= 1f + padding
-                    && viewportPosition.y >= -padding && viewportPosition.y <= 1f + padding;
+            bool isVisible = viewportPosition.z > 0f
+                             && viewportPosition.x >= -padding && viewportPosition.x <= 1f + padding
+                             && viewportPosition.y >= -padding && viewportPosition.y <= 1f + padding;
 
-                if (!isVisible)
-                    return true;
+            if (!isVisible)
+                return true;
 
-                float nextZ = position.z + step;
-                if (nextZ > maxSpawnZ)
-                    return false;
+            Ray topEdgeRay = viewCamera.ViewportPointToRay(
+                new Vector3(Mathf.Clamp01(viewportPosition.x), 1f + padding, 0f));
+            Plane spawnPlane = new Plane(Vector3.up, position);
 
-                position.z = nextZ;
-            }
+            if (!spawnPlane.Raycast(topEdgeRay, out float distance))
+                return false;
 
-            return false;
-        }
+            float z = topEdgeRay.GetPoint(distance).z;
+            if (z <= position.z || z > maxSpawnZ)
+                return false;
 
-        private Camera GetViewCamera()
-        {
-            if (_viewCamera == null)
-                _viewCamera = Camera.main;
-
-            return _viewCamera;
+            hiddenZ = z;
+            return true;
         }
 
         private int TakeRandomLane()

@@ -2,7 +2,7 @@
 using Gameplay;
 using Gameplay.Intro;
 using Services.Currency;
-using Services.Storage;
+using Services.Sequence;
 using UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,29 +11,27 @@ using UnityEngine.SceneManagement;
 public class GameManager : IDisposable
 {
     [SerializeField] private GameplayManager _gameplayManager;
-    [SerializeField] private UIManager _uiManager;
     [SerializeField] private CutsceneManager _cutsceneManager;
-    [SerializeField] private CurrencyCollection _currencyCollection;
 
-    private readonly CurrencyService _currencyService = new();
+    private CurrencyService _currencyService;
+    private IGameplaySequence _gameplaySequence;
+    private UIManager _uiManager;
 
     private bool _hasStarted;
     private bool _gameplayStarted;
 
-    public void Initialize()
+    public void Initialize(CurrencyService currencyService, IGameplaySequence gameplaySequence, UIManager uiManager)
     {
-        _currencyService.Init(new StorageService(), _currencyCollection);
+        _currencyService = currencyService;
+        _gameplaySequence = gameplaySequence;
+        _uiManager = uiManager;
 
-        _gameplayManager.Initialize();
-        _uiManager.Initialize(_currencyService);
+        _gameplayManager.Initialize(_gameplaySequence);
         _cutsceneManager.Initialize();
 
         _cutsceneManager.Completed += StartGameplay;
 
-        _uiManager.OnPlay += Play;
-        _uiManager.OnPause += Pause;
-        _uiManager.OnContinue += Continue;
-        _uiManager.OnRestart += Restart;
+        _uiManager.CommandRequested += HandleUICommand;
 
         _gameplayManager.LevelCompleted += _uiManager.ShowLevelCompleted;
         _gameplayManager.LevelFailed += _uiManager.ShowResult;
@@ -90,12 +88,31 @@ public class GameManager : IDisposable
 
     private void RewardForKill()
     {
-        _currencyService.GetCurrencyByType(CurrencyType.Gold).EarnCurrency(1);
+        _currencyService.GetCurrencyByType(CurrencyType.Coin).EarnCurrency(1);
+    }
+
+    private void HandleUICommand(UICommand command)
+    {
+        switch (command)
+        {
+            case UICommand.Play:
+                Play();
+                break;
+            case UICommand.Pause:
+                Pause();
+                break;
+            case UICommand.Continue:
+                Continue();
+                break;
+            case UICommand.Restart:
+                Restart();
+                break;
+        }
     }
 
     private void Restart()
     {
-        Time.timeScale = 1f;
+        _gameplaySequence.StartGame();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -104,15 +121,11 @@ public class GameManager : IDisposable
         _cutsceneManager.Completed -= StartGameplay;
         _cutsceneManager.Dispose();
 
-        _uiManager.OnPlay -= Play;
-        _uiManager.OnPause -= Pause;
-        _uiManager.OnContinue -= Continue;
-        _uiManager.OnRestart -= Restart;
+        _uiManager.CommandRequested -= HandleUICommand;
 
         _gameplayManager.LevelCompleted -= _uiManager.ShowLevelCompleted;
         _gameplayManager.LevelFailed -= _uiManager.ShowResult;
         _gameplayManager.EnemyKilled -= RewardForKill;
         _gameplayManager.Dispose();
-        _currencyService.Dispose();
     }
 }

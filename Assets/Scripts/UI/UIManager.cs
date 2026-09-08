@@ -1,54 +1,35 @@
 using System;
-using Services.Currency;
 using UI.Popups;
 using UnityEngine;
+using Zenject;
 
 namespace UI
 {
-    [Serializable]
-    public class UIManager
+    public enum UICommand
+    {
+        Play,
+        Pause,
+        Continue,
+        Restart
+    }
+
+    public class UIManager : MonoBehaviour, IInitializable
     {
         [SerializeField] private GameplayScreen _gameplayScreen;
         [SerializeField] private LevelCompletedPopup _levelCompletedPopup;
         [SerializeField] private ResultPopup _resultPopup;
-        [SerializeField] private CurrencyView _currencyView;
 
-        public event Action OnPlay
-        {
-            add => _gameplayScreen.OnPlay += value;
-            remove => _gameplayScreen.OnPlay -= value;
-        }
+        public event Action<UICommand> CommandRequested;
 
-        public event Action OnPause
+        public void Initialize()
         {
-            add => _gameplayScreen.OnPause += value;
-            remove => _gameplayScreen.OnPause -= value;
-        }
+            _gameplayScreen.PlayRequested += HandlePlayRequested;
+            _gameplayScreen.PauseRequested += HandlePauseRequested;
+            _gameplayScreen.ContinueRequested += HandleContinueRequested;
+            _levelCompletedPopup.RestartRequested += HandleRestartRequested;
+            _resultPopup.RestartRequested += HandleRestartRequested;
 
-        public event Action OnContinue
-        {
-            add => _gameplayScreen.OnContinue += value;
-            remove => _gameplayScreen.OnContinue -= value;
-        }
-
-        public event Action OnRestart
-        {
-            add
-            {
-                _levelCompletedPopup.OnButtonClicked += value;
-                _resultPopup.OnButtonClicked += value;
-            }
-            remove
-            {
-                _levelCompletedPopup.OnButtonClicked -= value;
-                _resultPopup.OnButtonClicked -= value;
-            }
-        }
-
-        public void Initialize(CurrencyService currencyService)
-        {
             _gameplayScreen.Initialize();
-            _currencyView.Initialize(currencyService);
             _levelCompletedPopup.CloseTrigger();
             _resultPopup.CloseTrigger();
         }
@@ -71,6 +52,35 @@ namespace UI
         public void ShowResult()
         {
             _resultPopup.Show();
+        }
+
+        private void HandlePlayRequested()
+        {
+            CommandRequested?.Invoke(UICommand.Play);
+        }
+
+        private void HandlePauseRequested()
+        {
+            CommandRequested?.Invoke(UICommand.Pause);
+        }
+
+        private void HandleContinueRequested()
+        {
+            CommandRequested?.Invoke(UICommand.Continue);
+        }
+
+        private void HandleRestartRequested()
+        {
+            CommandRequested?.Invoke(UICommand.Restart);
+        }
+
+        private void OnDestroy()
+        {
+            _gameplayScreen.PlayRequested -= HandlePlayRequested;
+            _gameplayScreen.PauseRequested -= HandlePauseRequested;
+            _gameplayScreen.ContinueRequested -= HandleContinueRequested;
+            _levelCompletedPopup.RestartRequested -= HandleRestartRequested;
+            _resultPopup.RestartRequested -= HandleRestartRequested;
         }
     }
 }

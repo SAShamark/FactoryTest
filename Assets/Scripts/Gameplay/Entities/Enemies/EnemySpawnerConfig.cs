@@ -1,12 +1,12 @@
 using UnityEngine;
 
-namespace Gameplay.Enemies
+namespace Gameplay.Entities.Enemies
 {
-    [CreateAssetMenu(fileName = "EnemySpawnerConfig", menuName = "Gameplay/Enemy Spawner Config")]
+    [CreateAssetMenu(fileName = "EnemySpawnerConfig", menuName = "ScriptableObjects/Gameplay/Enemy Spawner Config")]
     public class EnemySpawnerConfig : ScriptableObject
     {
         [Header("Pool")]
-        [SerializeField, Min(1)] private int _initialPoolSize = 72;
+        [SerializeField, Min(1)] private int _initialPoolSize = 36;
 
         [Header("Spawn Rate")]
         [SerializeField, Min(0f)] private float _initialDelay = 0.15f;
@@ -24,7 +24,6 @@ namespace Gameplay.Enemies
 
         [Header("Road")]
         [SerializeField, Min(1)] private int _laneCount = 3;
-        [SerializeField, Min(0f)] private float _roadHalfWidth = 3.5f;
         [SerializeField, Min(0f)] private float _laneJitter = 0.35f;
         [SerializeField, Min(0f)] private float _initialSpawnDistance = 10f;
         [SerializeField, Min(0f)] private float _spawnDistance = 42f;
@@ -33,23 +32,11 @@ namespace Gameplay.Enemies
         [SerializeField, Range(0f, 0.5f)] private float _spawnViewportPadding = 0.08f;
         [SerializeField, Min(0f)] private float _minimumSpawnAheadDistance = 8f;
         [SerializeField, Min(0f)] private float _despawnDistanceBehindTarget = 14f;
-        [SerializeField] private float _spawnY = 0f;
+        [SerializeField] private float _spawnY;
         [SerializeField] private float _enemyYaw = 180f;
 
-        [Header("Chase")]
-        [SerializeField, Min(0f)] private float _activationDistance = 18f;
-        [SerializeField, Min(0f)] private float _moveSpeed = 5.5f;
-        [SerializeField, Min(0f)] private float _rotationSpeed = 360f;
-
-        [Header("Idle Wander")]
-        [SerializeField, Min(0f)] private float _wanderSpeed = 1.25f;
-        [SerializeField, Min(0f)] private float _wanderMinPause = 1.2f;
-        [SerializeField, Min(0f)] private float _wanderMaxPause = 2.5f;
-        [SerializeField, Min(0.1f)] private float _wanderMinMoveDuration = 0.8f;
-        [SerializeField, Min(0.1f)] private float _wanderMaxMoveDuration = 1.8f;
-
-        [Header("Contact Damage")]
-        [SerializeField, Min(0f)] private float _contactDamage = 15f;
+        [Header("Enemy")]
+        [SerializeField] private EnemyConfig _enemy;
 
         [Header("Death Sequence")]
         [SerializeField, Min(0f)] private float _deathSurroundRadius = 2.6f;
@@ -66,27 +53,8 @@ namespace Gameplay.Enemies
         public float DespawnDistanceBehindTarget => _despawnDistanceBehindTarget;
         public float SpawnY => _spawnY;
         public float EnemyYaw => _enemyYaw;
-        public float ActivationDistance => _activationDistance;
-        public float ContactDamage => _contactDamage;
-        public float MoveSpeed => _moveSpeed;
-        public float RotationSpeed => _rotationSpeed;
-        public float RoadHalfWidth => _roadHalfWidth;
-        public float WanderSpeed => _wanderSpeed;
+        public EnemyConfig Enemy => _enemy;
         public int LaneCount => Mathf.Max(1, _laneCount);
-
-        public float GetWanderPauseDuration()
-        {
-            return Random.Range(
-                Mathf.Min(_wanderMinPause, _wanderMaxPause),
-                Mathf.Max(_wanderMinPause, _wanderMaxPause));
-        }
-
-        public float GetWanderMoveDuration()
-        {
-            return Random.Range(
-                Mathf.Min(_wanderMinMoveDuration, _wanderMaxMoveDuration),
-                Mathf.Max(_wanderMinMoveDuration, _wanderMaxMoveDuration));
-        }
 
         public float GetDeathSurroundRadius()
         {
@@ -118,7 +86,7 @@ namespace Gameplay.Enemies
                 return 0f;
 
             float t = laneIndex / (LaneCount - 1f);
-            float laneCenter = Mathf.Lerp(-_roadHalfWidth, _roadHalfWidth, t);
+            float laneCenter = Mathf.Lerp(-_enemy.RoadHalfWidth, _enemy.RoadHalfWidth, t);
             return laneCenter + Random.Range(-_laneJitter, _laneJitter);
         }
     }

@@ -3,6 +3,7 @@ using Services.Currency;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 namespace UI
 {
@@ -20,13 +21,20 @@ namespace UI
         private Tween _countTween;
         private Tween _punchTween;
         private Vector3 _textDefaultScale;
+        private CurrencyService _currencyService;
 
-        public void Initialize(CurrencyService currencyService)
+        [Inject]
+        private void Construct(CurrencyService currencyService)
+        {
+            _currencyService = currencyService;
+        }
+        
+        public void Initialize()
         {
             _textDefaultScale = _text.transform.localScale;
-            _image.sprite = currencyService.CurrencyCollection.GetSprite(_type);
+            _image.sprite = _currencyService.CurrencyCollection.GetSprite(_type);
 
-            _bank = currencyService.GetCurrencyByType(_type);
+            _bank = _currencyService.GetCurrencyByType(_type);
             _bank.OnCurrencyChanged += SetCurrency;
 
             _displayedValue = _bank.Currency;

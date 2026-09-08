@@ -13,3 +13,37 @@ MonoBehaviour:
   m_Name: LevelConfig
   m_EditorClassIdentifier: Assembly-CSharp::Gameplay.LevelConfig
   _targetDistance: 200
+  _startRampDuration: 1.25
+  _startRampCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _shootingDelay: 3
+  _noSpawnZoneDistance: 30
+  _alignmentStartDistance: 30
+  _alignmentDistance: 12
+  _gateOpenDistance: 22
+  _cameraFreezeDistance: 18
+  _victoryPresentationDuration: 2
+  _victoryExitViewportMargin: 0.15
+  _victoryMaximumDriveDuration: 5

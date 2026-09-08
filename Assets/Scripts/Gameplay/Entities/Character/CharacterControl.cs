@@ -1,6 +1,8 @@
 using Gameplay.Entities.BaseUnit;
+using Services.Sequence;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Zenject;
 
 namespace Gameplay.Entities.Character
 {
@@ -18,12 +20,19 @@ namespace Gameplay.Entities.Character
         private bool _isMoving;
         private bool _isShooting;
         private bool _hasAimInput;
+        private IGameplaySequence _gameplaySequence;
 
         public float TravelledDistance => _movementLogic.Distance;
 
+        [Inject]
+        private void Construct(IGameplaySequence gameplaySequence)
+        {
+            _gameplaySequence = gameplaySequence;
+        }
+
         private void Start()
         {
-            _turretShooter.Initialize();
+            _turretShooter.Initialize(_gameplaySequence);
             _turretAimLogic.Initialize(transform, _turret);
         }
 
