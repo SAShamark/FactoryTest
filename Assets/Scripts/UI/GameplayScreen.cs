@@ -8,11 +8,14 @@ namespace UI
     public class GameplayScreen : MonoBehaviour
     {
         [SerializeField] private Button _playButton;
+        [SerializeField] private GameObject _afterLaunch;
+        
         [SerializeField] private Button _pauseButton;
         [SerializeField] private Button _continueButton;
         [SerializeField] private TextMeshProUGUI _progressText;
+        [SerializeField] private Slider _progressSlider;
 
-        private int _displayedMeters = -1;
+        private int _displayedPercent = -1;
 
         public event Action OnPlay;
         public event Action OnPause;
@@ -32,19 +35,20 @@ namespace UI
 
         public void SetProgress(float travelledDistance, float targetDistance)
         {
-            int meters = Mathf.FloorToInt(travelledDistance);
+            float normalizedProgress = Mathf.Clamp01(travelledDistance / targetDistance);
+            _progressSlider.normalizedValue = normalizedProgress;
 
-            if (meters == _displayedMeters)
+            int percent = Mathf.FloorToInt(normalizedProgress * 100f);
+            if (percent == _displayedPercent)
                 return;
 
-            _displayedMeters = meters;
-            _progressText.text = $"{meters} / {Mathf.CeilToInt(targetDistance)} m";
+            _displayedPercent = percent;
+            _progressText.text = $"{percent}%";
         }
 
-        public void ShowFinished()
+        public void ShowLaunch()
         {
-            _playButton.gameObject.SetActive(false);
-            _pauseButton.gameObject.SetActive(true);
+            _afterLaunch.SetActive(true);
         }
 
         private void Play()
@@ -67,6 +71,7 @@ namespace UI
 
         private void ShowBeforePlay()
         {
+            _afterLaunch.SetActive(false);
             _playButton.gameObject.SetActive(true);
             _pauseButton.gameObject.SetActive(false);
             _continueButton.gameObject.SetActive(false);

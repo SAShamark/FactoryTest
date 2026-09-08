@@ -1,4 +1,5 @@
 using System;
+using Services.Currency;
 using UI.Popups;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace UI
         [SerializeField] private GameplayScreen _gameplayScreen;
         [SerializeField] private LevelCompletedPopup _levelCompletedPopup;
         [SerializeField] private ResultPopup _resultPopup;
+        [SerializeField] private CurrencyView _currencyView;
 
         public event Action OnPlay
         {
@@ -43,9 +45,10 @@ namespace UI
             }
         }
 
-        public void Initialize()
+        public void Initialize(CurrencyService currencyService)
         {
             _gameplayScreen.Initialize();
+            _currencyView.Initialize(currencyService);
             _levelCompletedPopup.CloseTrigger();
             _resultPopup.CloseTrigger();
         }
@@ -57,18 +60,16 @@ namespace UI
 
         public void ShowLevelCompleted()
         {
-            _gameplayScreen.ShowFinished();
             _levelCompletedPopup.Show();
         }
 
-        public void ShowIntro()
+        public void ShowLaunch()
         {
-            _gameplayScreen.ShowFinished();
+            _gameplayScreen.ShowLaunch();
         }
 
         public void ShowResult()
         {
-            _gameplayScreen.ShowFinished();
             _resultPopup.Show();
         }
     }

@@ -25,6 +25,8 @@ namespace Gameplay.Entities.Enemies
         private float _elapsedSeconds;
         private float _spawnTimer;
 
+        public event Action EnemyKilled;
+
         public bool HasAliveEnemies
         {
             get
@@ -170,7 +172,14 @@ namespace Gameplay.Entities.Enemies
                 _config.CatchUpDistanceBehindTarget,
                 _config.CatchUpMoveSpeed,
                 _config.RotationSpeed);
+            enemy.Died -= HandleEnemyKilled;
+            enemy.Died += HandleEnemyKilled;
             _aliveEnemies.Add(enemy);
+        }
+
+        private void HandleEnemyKilled()
+        {
+            EnemyKilled?.Invoke();
         }
 
         private Vector3 GetSpawnPosition(int waveIndex)

@@ -52,6 +52,12 @@ namespace Gameplay
         public event Action LevelCompleted;
         public event Action LevelFailed;
 
+        public event Action EnemyKilled
+        {
+            add => _enemySpawner.EnemyKilled += value;
+            remove => _enemySpawner.EnemyKilled -= value;
+        }
+
         public void Initialize()
         {
             _enemySpawner.Initialize();

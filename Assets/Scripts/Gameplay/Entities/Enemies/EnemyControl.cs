@@ -15,8 +15,7 @@ namespace Gameplay.Entities.Enemies
         [SerializeField] private HitFeedback _hitFeedback;
 
         [Header("Death Feedback")]
-        [SerializeField] private GameObject _deathEffectPrefab;
-        [SerializeField] private Vector3 _deathEffectOffset = new(0f, 0.9f, 0f);
+        [SerializeField] private ParticleSystem _deathEffect;
         [SerializeField, Min(0f)] private float _deathJumpDistance = 0.7f;
         [SerializeField, Min(0f)] private float _deathJumpHeight = 0.8f;
         [SerializeField, Min(0.01f)] private float _deathDuration = 0.3f;
@@ -234,13 +233,7 @@ namespace Gameplay.Entities.Enemies
 
         private void PlayDeathEffect()
         {
-            if (_deathEffectPrefab == null)
-                return;
-
-            Instantiate(
-                _deathEffectPrefab,
-                transform.TransformPoint(_deathEffectOffset),
-                Quaternion.identity);
+            _deathEffect.Play();
         }
 
         private void PlayDeathAnimation()

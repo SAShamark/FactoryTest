@@ -1,110 +1,76 @@
-/*
 using DG.Tweening;
-using Game.Entities.Units.Character.Parts.Inventory;
-using Services;
 using Services.Currency;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.Widgets
+namespace UI
 {
     public class CurrencyView : MonoBehaviour
     {
         [SerializeField] private CurrencyType _type;
         [SerializeField] private TMP_Text _text;
         [SerializeField] private Image _image;
-        [SerializeField] private float _currencyTweenDuration = 0.35f;
-        [SerializeField] private float _floatingDeltaDistance = 90f;
-        [SerializeField] private Vector3 _spendPulseStrength = new(0.18f, 0.18f, 0f);
-        [SerializeField] private float _spendPulseDuration = 0.25f;
+        [SerializeField] private float _countDuration = 0.35f;
+        [SerializeField] private Vector3 _punchStrength = new(0.18f, 0.18f, 0f);
+        [SerializeField] private float _punchDuration = 0.25f;
 
-        private Inventory _inventory;
-        private int _lastCurrencyValue;
-        private int _displayedCurrencyValue;
-        private Tween _currencyTween;
-        private Tween _spendPulseTween;
+        private IBank _bank;
+        private int _displayedValue;
+        private Tween _countTween;
+        private Tween _punchTween;
         private Vector3 _textDefaultScale;
 
-        public void Bind(Inventory inventory)
+        public void Initialize(CurrencyService currencyService)
         {
-            if (_inventory != null)
-            {
-                _inventory.OnItemsCountChanged -= HandleItemsCountChanged;
-            }
-
-            _inventory = inventory;
             _textDefaultScale = _text.transform.localScale;
-            _inventory.OnItemsCountChanged += HandleItemsCountChanged;
+            _image.sprite = currencyService.CurrencyCollection.GetSprite(_type);
 
-            int itemsCount = _inventory.GetItemsCount(_type);
-            _lastCurrencyValue = itemsCount;
-            _displayedCurrencyValue = itemsCount;
-            _text.text = NumberFormatter.FormatBalance(itemsCount);
-            _image.sprite = ServicesManager.Instance.CurrencyService.CurrencyCollection.GetSprite(_type);
-        }
-        
-        protected virtual void OnDestroy()
-        {
-            if (_inventory != null)
-            {
-                _inventory.OnItemsCountChanged -= HandleItemsCountChanged;
-            }
+            _bank = currencyService.GetCurrencyByType(_type);
+            _bank.OnCurrencyChanged += SetCurrency;
 
-            _currencyTween?.Kill();
-            _spendPulseTween?.Kill();
+            _displayedValue = _bank.Currency;
+            _text.text = _displayedValue.ToString();
         }
 
-        private void HandleItemsCountChanged(CurrencyType currencyType, int value)
+        private void OnDestroy()
         {
-            if (currencyType == _type)
-            {
-                SetCurrencyText(value);
-            }
+            if (_bank != null)
+                _bank.OnCurrencyChanged -= SetCurrency;
+
+            _countTween?.Kill();
+            _punchTween?.Kill();
         }
 
-        private void SetCurrencyText(int value)
+        private void SetCurrency(int value)
         {
-            int delta = value - _lastCurrencyValue;
-            _currencyTween?.Kill();
+            _countTween?.Kill();
 
-            if (gameObject.activeInHierarchy)
+            if (!gameObject.activeInHierarchy)
             {
-                _currencyTween = CurrencyTextAnimator.AnimateNumber(_text, _displayedCurrencyValue, value,
-                    _currencyTweenDuration, NumberFormatter.FormatBalance, displayedValue =>
-                    {
-                        _displayedCurrencyValue = displayedValue;
-                    });
-            }
-            else
-            {
-                _displayedCurrencyValue = value;
-                _text.text = NumberFormatter.FormatBalance(value);
+                SetDisplayedValue(value);
+                return;
             }
 
-            if (delta < 0 && gameObject.activeInHierarchy)
-            {
-                PlaySpendPulse();
-            }
+            _countTween = DOTween.To(() => _displayedValue, SetDisplayedValue, value, _countDuration)
+                .SetLink(gameObject);
 
-            _lastCurrencyValue = value;
+            PlayPunch();
         }
 
-        private void PlaySpendPulse()
+        private void SetDisplayedValue(int value)
         {
-            _spendPulseTween?.Kill();
+            _displayedValue = value;
+            _text.text = value.ToString();
+        }
+
+        private void PlayPunch()
+        {
+            _punchTween?.Kill();
             _text.transform.localScale = _textDefaultScale;
-            _spendPulseTween = _text.transform
-                .DOPunchScale(_spendPulseStrength, _spendPulseDuration, 8, 0.8f)
-                .SetLink(gameObject)
-                .OnKill(() =>
-                {
-                    if (_text != null)
-                    {
-                        _text.transform.localScale = _textDefaultScale;
-                    }
-                });
+            _punchTween = _text.transform
+                .DOPunchScale(_punchStrength, _punchDuration, 8, 0.8f)
+                .SetLink(gameObject);
         }
     }
 }
-*/
