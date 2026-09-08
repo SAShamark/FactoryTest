@@ -1,4 +1,5 @@
 using DG.Tweening;
+using Services.ObjectPool;
 using TMPro;
 using UnityEngine;
 
@@ -27,32 +28,12 @@ namespace Gameplay.Entities.BaseUnit
         private Camera _camera;
         private Sequence _sequence;
 
-        public void SetAsTemplate()
+        public void Play(string value, bool isReward, Vector3 worldPosition, Camera viewCamera)
         {
-            gameObject.SetActive(false);
-        }
+            _sequence?.Kill();
+            _camera = viewCamera;
 
-        public void ShowDamage(float damage, Vector3 worldPosition)
-        {
-            int displayedDamage = Mathf.Max(1, Mathf.RoundToInt(damage));
-            Spawn(displayedDamage.ToString(), worldPosition, false);
-        }
-
-        public void ShowReward(Vector3 worldPosition)
-        {
-            Spawn("+1", worldPosition, true);
-        }
-
-        private void Spawn(string value, Vector3 worldPosition, bool isReward)
-        {
-            FloatingTextControl instance = Instantiate(this, worldPosition, Quaternion.identity);
-            instance.gameObject.SetActive(true);
-            instance.Play(value, isReward);
-        }
-
-        private void Play(string value, bool isReward)
-        {
-            _camera = Camera.main;
+            transform.position = worldPosition;
             _text.text = value;
             _text.color = isReward ? _rewardColor : _damageColor;
             _icon.gameObject.SetActive(isReward);
@@ -63,7 +44,7 @@ namespace Gameplay.Entities.BaseUnit
             SetAlpha(0f);
             FaceCamera();
 
-            Vector3 endPosition = transform.position + Vector3.up * _riseDistance;
+            Vector3 endPosition = worldPosition + Vector3.up * _riseDistance;
             if (_camera != null)
                 endPosition += _camera.transform.right * Random.Range(-_horizontalDrift, _horizontalDrift);
 
@@ -78,7 +59,17 @@ namespace Gameplay.Entities.BaseUnit
             _sequence.Insert(fadeOutStart,
                 transform.DOScale(targetScale * 0.8f, Mathf.Min(_fadeOutDuration, _duration - fadeOutStart))
                     .SetEase(Ease.InQuad));
-            _sequence.SetLink(gameObject).OnComplete(() => Destroy(gameObject));
+            _sequence.SetLink(gameObject).OnComplete(ReturnToPool);
+        }
+
+        private void ReturnToPool()
+        {
+            _sequence = null;
+
+            if (TryGetComponent(out BasePoolDestroyable poolDestroyable))
+                poolDestroyable.DestroyObject();
+            else
+                gameObject.SetActive(false);
         }
 
         private void LateUpdate()

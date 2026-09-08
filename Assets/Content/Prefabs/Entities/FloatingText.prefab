@@ -137,8 +137,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47dcb3d5545e0374788efc862d210a2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  _text: {fileID: 0}
-  _image: {fileID: 0}
+  _text: {fileID: 3952196246399706907}
+  _icon: {fileID: 2813356605279341180}
+  _damageColor: {r: 1, g: 1, b: 1, a: 1}
+  _damageScale: 0.8
+  _rewardColor: {r: 1, g: 0.78, b: 0.08, a: 1}
+  _rewardScale: 1.15
+  _duration: 0.9
+  _riseDistance: 1.4
+  _horizontalDrift: 0.2
+  _fadeInDuration: 0.1
+  _fadeOutDuration: 0.25
 --- !u!1 &7544509066438996396
 GameObject:
   m_ObjectHideFlags: 0

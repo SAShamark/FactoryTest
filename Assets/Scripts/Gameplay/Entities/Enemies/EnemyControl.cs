@@ -22,19 +22,25 @@ namespace Gameplay.Entities.Enemies
         private Vector3 _surroundOffset;
         private Collider[] _colliders;
 
-        protected override HitFeedback HitFeedback => _effects.HitFeedback;
+        protected override HitFeedback HitFeedback => _effects != null ? _effects.HitFeedback : null;
 
         public event Action KilledByPlayer;
 
         protected override void Awake()
         {
+            if (_animationControl == null)
+                _animationControl = GetComponent<EnemyAnimationControl>();
+
+            if (_effects == null)
+                _effects = GetComponent<EnemyEffects>();
+
             base.Awake();
             _colliders = GetComponentsInChildren<Collider>(true);
         }
 
         public void Spawn(Vector3 position, Quaternion rotation)
         {
-            _effects.ResetVisuals();
+            _effects?.ResetVisuals();
             InitializeUnit();
             transform.SetPositionAndRotation(position, rotation);
             _target = null;
@@ -43,19 +49,19 @@ namespace Gameplay.Entities.Enemies
             _isSurrounding = false;
             _hasDealtContactDamage = false;
             SetCollidersEnabled(true);
-            _animationControl.SetEnabled(true);
-            _animationControl.SetRun(false);
+            _animationControl?.SetEnabled(true);
+            _animationControl?.SetRun(false);
         }
 
         public void Spawn(Vector3 position, Quaternion rotation, Transform target,
-            EnemyConfig config, FloatingTextControl floatingText)
+            EnemyConfig config, FloatingTextService floatingText)
         {
             Spawn(position, rotation);
             _target = target;
             _targetUnit = target.GetComponentInParent<BaseUnitControl>();
             _config = config;
             _activationDistanceSqr = config.ActivationDistance * config.ActivationDistance;
-            _effects.SetFloatingText(floatingText);
+            _effects?.SetFloatingText(floatingText);
             _movementLogic.Initialize(config);
         }
 
@@ -66,7 +72,7 @@ namespace Gameplay.Entities.Enemies
 
             if (_isSurrounding)
             {
-                _animationControl.SetRun(
+                _animationControl?.SetRun(
                     _movementLogic.Surround(transform, _target.position + _surroundOffset, _target.position));
                 return;
             }
@@ -78,7 +84,7 @@ namespace Gameplay.Entities.Enemies
             {
                 if (toTarget.sqrMagnitude > _activationDistanceSqr)
                 {
-                    _animationControl.SetRun(_movementLogic.Wander(transform));
+                    _animationControl?.SetRun(_movementLogic.Wander(transform));
                     return;
                 }
 
@@ -86,7 +92,7 @@ namespace Gameplay.Entities.Enemies
                 _movementLogic.StopWander();
             }
 
-            _animationControl.SetRun(_movementLogic.Chase(transform, toTarget));
+            _animationControl?.SetRun(_movementLogic.Chase(transform, toTarget));
         }
 
         public void BeginSurrounding(Vector3 offset)
@@ -112,11 +118,11 @@ namespace Gameplay.Entities.Enemies
             if (isLethal)
             {
                 KilledByPlayer?.Invoke();
-                _effects.ShowReward();
+                _effects?.ShowReward();
             }
             else
             {
-                _effects.ShowDamage(appliedDamage);
+                _effects?.ShowDamage(appliedDamage);
             }
         }
 
@@ -127,7 +133,7 @@ namespace Gameplay.Entities.Enemies
             _isChasing = false;
             _isSurrounding = false;
             _movementLogic.StopWander();
-            _animationControl.SetRun(false);
+            _animationControl?.SetRun(false);
 
             if (TryGetComponent(out BasePoolDestroyable poolDestroyable))
             {
@@ -151,9 +157,13 @@ namespace Gameplay.Entities.Enemies
             _isSurrounding = false;
             _movementLogic.StopWander();
             SetCollidersEnabled(false);
-            _animationControl.SetRun(false);
-            _animationControl.SetEnabled(false);
-            _effects.PlayDeath(Despawn);
+            _animationControl?.SetRun(false);
+            _animationControl?.SetEnabled(false);
+
+            if (_effects != null)
+                _effects.PlayDeath(Despawn);
+            else
+                Despawn();
         }
 
         private void OnTriggerEnter(Collider other)

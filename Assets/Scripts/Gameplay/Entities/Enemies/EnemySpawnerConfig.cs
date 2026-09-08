@@ -6,21 +6,20 @@ namespace Gameplay.Entities.Enemies
     public class EnemySpawnerConfig : ScriptableObject
     {
         [Header("Pool")]
-        [SerializeField, Min(1)] private int _initialPoolSize = 36;
+        [SerializeField, Min(1)] private int _initialPoolSize = 48;
 
         [Header("Spawn Rate")]
         [SerializeField, Min(0f)] private float _initialDelay = 0.15f;
-        [SerializeField, Min(0.05f)] private float _startSpawnInterval = 1.35f;
-        [SerializeField, Min(0.05f)] private float _minSpawnInterval = 0.45f;
-        [SerializeField, Min(0f)] private float _spawnIntervalDecreasePerMinute = 0.25f;
+        [SerializeField, Min(0.05f)] private float _startSpawnInterval = 0.45f;
+        [SerializeField, Min(0.05f)] private float _minSpawnInterval = 0.15f;
+        [SerializeField, Min(0f)] private float _spawnIntervalDecreasePerMinute = 0.083333336f;
 
-        [Header("Waves")]
-        [SerializeField, Min(1)] private int _startSpawnCount = 4;
-        [SerializeField, Min(1)] private int _maxSpawnCount = 16;
-        [SerializeField, Min(1f)] private float _spawnCountIncreaseEverySeconds = 30f;
-        [SerializeField, Min(1)] private int _startMaxAliveEnemies = 32;
-        [SerializeField, Min(1)] private int _maxAliveEnemies = 96;
-        [SerializeField, Min(0f)] private float _maxAliveIncreasePerMinute = 16f;
+        [SerializeField, Range(0f, 0.5f)] private float _spawnIntervalRandomness = 0.18f;
+
+        [Header("Population")]
+        [SerializeField, Min(1)] private int _startMaxAliveEnemies = 48;
+        [SerializeField, Min(1)] private int _maxAliveEnemies = 144;
+        [SerializeField, Min(0f)] private float _maxAliveIncreasePerMinute = 24f;
 
         [Header("Road")]
         [SerializeField, Min(1)] private int _laneCount = 3;
@@ -28,7 +27,6 @@ namespace Gameplay.Entities.Enemies
         [SerializeField, Min(0f)] private float _initialSpawnDistance = 10f;
         [SerializeField, Min(0f)] private float _spawnDistance = 42f;
         [SerializeField, Min(0f)] private float _spawnDistanceJitter = 8f;
-        [SerializeField, Min(0f)] private float _forwardSpacingInWave = 3f;
         [SerializeField, Range(0f, 0.5f)] private float _spawnViewportPadding = 0.08f;
         [SerializeField, Min(0f)] private float _minimumSpawnAheadDistance = 8f;
         [SerializeField, Min(0f)] private float _despawnDistanceBehindTarget = 14f;
@@ -47,7 +45,6 @@ namespace Gameplay.Entities.Enemies
         public float InitialSpawnDistance => _initialSpawnDistance;
         public float SpawnDistance => _spawnDistance;
         public float SpawnDistanceJitter => _spawnDistanceJitter;
-        public float ForwardSpacingInWave => _forwardSpacingInWave;
         public float SpawnViewportPadding => _spawnViewportPadding;
         public float MinimumSpawnAheadDistance => _minimumSpawnAheadDistance;
         public float DespawnDistanceBehindTarget => _despawnDistanceBehindTarget;
@@ -65,13 +62,10 @@ namespace Gameplay.Entities.Enemies
         public float GetSpawnInterval(float elapsedSeconds)
         {
             float elapsedMinutes = elapsedSeconds / 60f;
-            return Mathf.Max(_minSpawnInterval, _startSpawnInterval - elapsedMinutes * _spawnIntervalDecreasePerMinute);
-        }
-
-        public int GetSpawnCount(float elapsedSeconds)
-        {
-            int extraEnemies = Mathf.FloorToInt(elapsedSeconds / _spawnCountIncreaseEverySeconds);
-            return Mathf.Clamp(_startSpawnCount + extraEnemies, 1, _maxSpawnCount);
+            float interval = Mathf.Max(_minSpawnInterval,
+                _startSpawnInterval - elapsedMinutes * _spawnIntervalDecreasePerMinute);
+            float randomness = Random.Range(1f - _spawnIntervalRandomness, 1f + _spawnIntervalRandomness);
+            return Mathf.Max(_minSpawnInterval, interval * randomness);
         }
 
         public int GetMaxAliveEnemies(float elapsedSeconds)

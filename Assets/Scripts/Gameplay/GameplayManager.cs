@@ -1,5 +1,6 @@
 ﻿using System;
 using Gameplay.Entities;
+using Gameplay.Entities.BaseUnit;
 using Gameplay.Entities.Character;
 using Gameplay.Entities.Enemies;
 using Services.Sequence;
@@ -51,10 +52,10 @@ namespace Gameplay
             remove => _enemySpawner.EnemyKilled -= value;
         }
 
-        public void Initialize(IGameplaySequence gameplaySequence)
+        public void Initialize(IGameplaySequence gameplaySequence, FloatingTextService floatingTextService)
         {
             _gameplaySequence = gameplaySequence;
-            _enemySpawner.Initialize();
+            _enemySpawner.Initialize(floatingTextService);
             _enemySpawner.StopSpawn();
             _environmentControl.Initialize(_levelConfig.TargetDistance);
             _enemySpawner.SetSpawnLimit(_environmentControl.FinishZ, _levelConfig.NoSpawnZoneDistance);

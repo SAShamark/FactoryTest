@@ -1,9 +1,12 @@
+using System;
 using Unity.Cinemachine;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Gameplay
 {
-    public class CameraShake : MonoBehaviour
+    [Serializable]
+    public class CameraShake 
     {
         private const int ImpulseChannel = 1;
         private const float DamageDownwardBias = -0.25f;

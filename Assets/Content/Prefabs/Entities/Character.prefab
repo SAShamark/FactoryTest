@@ -166,7 +166,6 @@ Transform:
   - {fileID: 9124641895747922109}
   - {fileID: 4987120233344172014}
   - {fileID: 6919987309567596807}
-  - {fileID: 4229935807124962491}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2644307618094719431
@@ -199,7 +198,7 @@ MonoBehaviour:
     _projectilePrefab: {fileID: 2157963603094699891, guid: fe763c4cd99a1c8448bd7a996c183a24, type: 3}
     _projectileContainer: {fileID: 219718163641446714}
     _initialPoolSize: 12
-    _shotsPerSecond: 4
+    _shotsPerSecond: 4.8
     _muzzleDistance: 1.5
   _characterEffects: {fileID: 2748380449892478578}
 --- !u!114 &2748380449892478578
@@ -1257,93 +1256,3 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1001 &8273758727031291662
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 6692691270444024255}
-    m_Modifications:
-    - target: {fileID: 3853233167087500711, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: _icon
-      value: 
-      objectReference: {fileID: 6186053993128555890}
-    - target: {fileID: 3853233167087500711, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: _text
-      value: 
-      objectReference: {fileID: 4903098596996782101}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6541774428853751154, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_Name
-      value: FloatingText
-      objectReference: {fileID: 0}
-    - target: {fileID: 6541774428853751154, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
---- !u!4 &4229935807124962491 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5215603282514248629, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-  m_PrefabInstance: {fileID: 8273758727031291662}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &4903098596996782101 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3952196246399706907, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-  m_PrefabInstance: {fileID: 8273758727031291662}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshPro
---- !u!212 &6186053993128555890 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 2813356605279341180, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
-  m_PrefabInstance: {fileID: 8273758727031291662}
-  m_PrefabAsset: {fileID: 0}

@@ -1290,9 +1290,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6e4b6acdcf2c4f7baf5e9bbd6e7d6a31, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::Services.Installers.GameplaySceneInstaller
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Services.Installers.GameSceneInstaller
   _uiManager: {fileID: 1708532055}
+  _floatingTextPrefab: {fileID: 3853233167087500711, guid: 3ce7b30c92db19e44a09cd02214eef89, type: 3}
+  _cameraController: {fileID: 1795605206}
+  _floatingTextPoolSize: 4
 --- !u!1 &931388335
 GameObject:
   m_ObjectHideFlags: 0
@@ -1596,9 +1599,10 @@ MonoBehaviour:
         _target: {fileID: 557790184}
         _enemyPrefab: {fileID: 7806806079220152665, guid: 284de48614624ad4ba078055729abfbc, type: 3}
         _enemyContainer: {fileID: 815926787}
+        _cameraController: {fileID: 1795605206}
+      _environmentControl: {fileID: 1542968525}
       _character: {fileID: 557790186}
       _levelConfig: {fileID: 11400000, guid: fa43e88769de9dd4c82e0abf3e813e7b, type: 2}
-      _environmentControl: {fileID: 1542968525}
       _deathTimeScale: 0.2
       _deathSlowMotionDuration: 0.15
       _deathPresentationDuration: 2
@@ -2408,7 +2412,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c91f7d76a34d7614e990fea2de610e93, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.UIManager
   _gameplayScreen: {fileID: 1674055008}
   _levelCompletedPopup: {fileID: 1372452131}
@@ -2472,10 +2476,11 @@ MonoBehaviour:
   _following: {fileID: 14748311}
   _livePriority: 10
   _standbyPriority: 0
-  _damageShakeStrength: 0.45
-  _damageShakeDuration: 0.28
-  _deathShakeStrength: 1
-  _deathShakeDuration: 0.3
+  _cameraShake:
+    _damageStrength: 0.7
+    _damageDuration: 0.28
+    _deathStrength: 1
+    _deathDuration: 0.3
 --- !u!1 &1844711715
 GameObject:
   m_ObjectHideFlags: 0
@@ -2890,7 +2895,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8122339617051279735, guid: 5d2d3667c2b20484cb7328874478e29f, type: 3}
       propertyPath: _currencyView
-      value:
+      value: 
       objectReference: {fileID: 807023574}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

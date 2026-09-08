@@ -43,7 +43,7 @@ Animator:
   m_GameObject: {fileID: 270735632416611886}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 30de4e105ddc5fa43ad215ac4484a07c, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 2
   m_ApplyRootMotion: 1
@@ -101,7 +101,7 @@ GameObject:
   - component: {fileID: 322347183484551956}
   - component: {fileID: 8742283838062701700}
   m_Layer: 0
-  m_Name: Spot Light
+  m_Name: Main Spot Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -115,13 +115,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6725097191263932234}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.42441058, y: -0.43584237, z: 0.24503356, w: 0.7549011}
-  m_LocalPosition: {x: 5.2, y: 6.89, z: -1.39}
+  m_LocalRotation: {x: 0.3596684, y: -0.51394725, z: 0.18817955, w: 0.75570196}
+  m_LocalPosition: {x: 6.23, y: 10.2, z: -2.63}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6009774261547645044}
-  m_LocalEulerAnglesHint: {x: 58.69, y: -60, z: 0}
+  m_LocalEulerAnglesHint: {x: 47.479, y: -71.63, z: -7.249}
 --- !u!108 &322347183484551956
 Light:
   m_ObjectHideFlags: 0
@@ -132,11 +132,11 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 0
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 30
-  m_Range: 25.2
-  m_SpotAngle: 30
-  m_InnerSpotAngle: 21.80208
+  m_Color: {r: 1, g: 0.91933215, b: 0.6924528, a: 1}
+  m_Intensity: 200
+  m_Range: 44.0031
+  m_SpotAngle: 90
+  m_InnerSpotAngle: 46.129894
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 0
@@ -630,6 +630,14 @@ PrefabInstance:
     - target: {fileID: 6317583642720970059, guid: 6883d06eb4669f147a247589f24ed301, type: 3}
       propertyPath: m_LocalPosition.z
       value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6317583642720970059, guid: 6883d06eb4669f147a247589f24ed301, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6317583642720970059, guid: 6883d06eb4669f147a247589f24ed301, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6317583642720970063, guid: 6883d06eb4669f147a247589f24ed301, type: 3}
       propertyPath: m_RootOrder

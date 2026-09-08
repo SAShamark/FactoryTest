@@ -19,7 +19,7 @@ namespace Gameplay.Entities.Enemies
         private readonly List<EnemyControl> _aliveEnemies = new();
         private readonly List<int> _availableLanes = new();
         private ObjectPool<EnemyControl> _enemyPool;
-        private FloatingTextControl _floatingText;
+        private FloatingTextService _floatingTextService;
         private bool _isInitialized;
         private bool _isSpawning;
         private bool _isInitialWavePending;
@@ -45,19 +45,15 @@ namespace Gameplay.Entities.Enemies
             }
         }
 
-        public void Initialize()
+        public void Initialize(FloatingTextService floatingTextService)
         {
             if (_isInitialized)
                 return;
 
+            _floatingTextService = floatingTextService;
+
             if (_config != null && _enemyPrefab != null)
                 _enemyPool = new ObjectPool<EnemyControl>(_enemyPrefab, _config.InitialPoolSize, _enemyContainer);
-
-            if (_target != null)
-            {
-                _floatingText = _target.GetComponentInChildren<FloatingTextControl>(true);
-                _floatingText?.SetAsTemplate();
-            }
 
             _spawnTimer = _config != null ? _config.InitialDelay : 0f;
             _isInitialized = true;
@@ -86,8 +82,6 @@ namespace Gameplay.Entities.Enemies
 
         public void StartSpawn(bool resetProgress = false)
         {
-            Initialize();
-
             if (resetProgress)
             {
                 _elapsedSeconds = 0f;
@@ -151,44 +145,29 @@ namespace Gameplay.Entities.Enemies
             if (_spawnTimer > 0f)
                 return;
 
-            SpawnWave();
+            SpawnNextEnemy();
             _spawnTimer += _config.GetSpawnInterval(_elapsedSeconds);
         }
 
-        private void SpawnWave()
+        private void SpawnNextEnemy()
         {
             int freeSlots = _config.GetMaxAliveEnemies(_elapsedSeconds) - _aliveEnemies.Count;
             if (freeSlots <= 0)
                 return;
 
-            int spawnCount = Mathf.Min(_config.GetSpawnCount(_elapsedSeconds), freeSlots);
-            RefillLaneBag();
-            bool spawnedAnyEnemy = false;
-
-            for (int i = 0; i < spawnCount; i++)
-            {
-                if (!SpawnEnemy(i, _isInitialWavePending))
-                {
-                    StopSpawn();
-                    break;
-                }
-
-                spawnedAnyEnemy = true;
-            }
-
-            if (spawnedAnyEnemy)
+            if (SpawnEnemy(_isInitialWavePending))
                 _isInitialWavePending = false;
         }
 
-        private bool SpawnEnemy(int waveIndex, bool isInitialWave)
+        private bool SpawnEnemy(bool isInitialWave)
         {
-            if (!TryGetSpawnPosition(waveIndex, isInitialWave, out Vector3 position))
+            if (!TryGetSpawnPosition(isInitialWave, out Vector3 position))
                 return false;
 
             EnemyControl enemy = _enemyPool.GetFreeElement();
             Quaternion rotation = Quaternion.Euler(0f, _config.EnemyYaw, 0f);
 
-            enemy.Spawn(position, rotation, _target, _config.Enemy, _floatingText);
+            enemy.Spawn(position, rotation, _target, _config.Enemy, _floatingTextService);
             enemy.KilledByPlayer -= HandleEnemyKilled;
             enemy.KilledByPlayer += HandleEnemyKilled;
             _aliveEnemies.Add(enemy);
@@ -200,7 +179,7 @@ namespace Gameplay.Entities.Enemies
             EnemyKilled?.Invoke();
         }
 
-        private bool TryGetSpawnPosition(int waveIndex, bool isInitialWave, out Vector3 position)
+        private bool TryGetSpawnPosition(bool isInitialWave, out Vector3 position)
         {
             int lane = TakeRandomLane();
             float x = _config.GetLaneOffset(lane);
@@ -212,12 +191,11 @@ namespace Gameplay.Entities.Enemies
             if (!isInitialWave)
                 z += Random.Range(-_config.SpawnDistanceJitter, _config.SpawnDistanceJitter);
 
-            z += waveIndex * _config.ForwardSpacingInWave;
             float maxSpawnZ = float.PositiveInfinity;
 
             if (_hasSpawnLimit)
             {
-                maxSpawnZ = _maxSpawnZ - waveIndex * _config.ForwardSpacingInWave;
+                maxSpawnZ = _maxSpawnZ;
                 z = Mathf.Min(z, maxSpawnZ);
             }
 

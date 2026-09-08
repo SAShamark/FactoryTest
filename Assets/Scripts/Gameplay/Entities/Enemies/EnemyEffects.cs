@@ -19,7 +19,7 @@ namespace Gameplay.Entities.Enemies
         [SerializeField, Min(0.01f)] private float _deathDuration = 0.3f;
         [SerializeField, Range(0f, 1f)] private float _deathEndScale = 0.15f;
 
-        private FloatingTextControl _floatingText;
+        private FloatingTextService _floatingText;
         private Vector3 _defaultScale;
         private Tween _deathTween;
 
@@ -30,7 +30,7 @@ namespace Gameplay.Entities.Enemies
             _defaultScale = transform.localScale;
         }
 
-        public void SetFloatingText(FloatingTextControl floatingText)
+        public void SetFloatingText(FloatingTextService floatingText)
         {
             _floatingText = floatingText;
         }

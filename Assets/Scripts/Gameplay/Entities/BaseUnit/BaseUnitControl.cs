@@ -16,7 +16,7 @@ namespace Gameplay.Entities.BaseUnit
 
         protected void InitializeUnit()
         {
-            HitFeedback.Reset();
+            HitFeedback?.Reset();
             _health.Init();
             _health.OnDeath -= Die;
             _health.OnDeath += Die;
@@ -25,12 +25,12 @@ namespace Gameplay.Entities.BaseUnit
 
         protected virtual void Awake()
         {
-            HitFeedback.Initialize();
+            HitFeedback?.Initialize();
         }
 
         protected virtual void OnDestroy()
         {
-            HitFeedback.Dispose();
+            HitFeedback?.Dispose();
             _health.OnDeath -= Die;
         }
 
@@ -41,7 +41,7 @@ namespace Gameplay.Entities.BaseUnit
 
         public virtual void PlayHitFeedback(Vector3 hitPosition)
         {
-            HitFeedback.Play(hitPosition);
+            HitFeedback?.Play(hitPosition);
         }
 
         protected void MarkAsDead()

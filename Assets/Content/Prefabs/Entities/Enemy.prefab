@@ -388,6 +388,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6463198228005416732}
   - component: {fileID: 7806806079220152665}
+  - component: {fileID: 2180796391112519001}
+  - component: {fileID: 2180796391112519002}
   - component: {fileID: 7346816722053741093}
   - component: {fileID: -225668940511221836}
   m_Layer: 0
@@ -425,12 +427,38 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 11467a2131e49a043a399a3ad29928ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   _health:
     _maxHealth: 100
     _healthBarView: {fileID: 4505016190093060938}
+  _animationControl: {fileID: 2180796391112519001}
+  _effects: {fileID: 2180796391112519002}
+--- !u!114 &2180796391112519001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950442037443284760}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de0725ad2f2f7e44f977eec422734ba0, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
   _animator: {fileID: 2702866208400629091}
+--- !u!114 &2180796391112519002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950442037443284760}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9d37a29b720c8e43b8197ce70f147fb, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
   _hitFeedback:
     _visualRoot: {fileID: 4569869346492034733}
     _hitEffect: {fileID: 7839052585181763697}
