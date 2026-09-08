@@ -38,6 +38,11 @@ namespace Gameplay.Entities
             _finishGate?.Close();
         }
 
+        public void StopGroundRecycling()
+        {
+            _groundControl?.StopRecycling();
+        }
+
         public void PlayVictoryEffects()
         {
             foreach (ParticleSystem effect in _victoryEffects)

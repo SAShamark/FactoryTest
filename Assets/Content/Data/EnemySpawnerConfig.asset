@@ -29,6 +29,7 @@ MonoBehaviour:
   _spawnDistance: 42
   _spawnDistanceJitter: 8
   _forwardSpacingInWave: 3
+  _spawnViewportPadding: 0.08
   _minimumSpawnAheadDistance: 8
   _despawnDistanceBehindTarget: 14
   _spawnY: 0
@@ -38,6 +39,11 @@ MonoBehaviour:
   _catchUpDistanceBehindTarget: 1.5
   _catchUpMoveSpeed: 11
   _rotationSpeed: 360
+  _wanderSpeed: 1.25
+  _wanderMinPause: 1.2
+  _wanderMaxPause: 2.5
+  _wanderMinMoveDuration: 0.8
+  _wanderMaxMoveDuration: 1.8
   _contactDistance: 1.4
   _contactDamage: 15
   _deathSurroundRadius: 2.6

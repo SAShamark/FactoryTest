@@ -11,6 +11,7 @@ namespace Gameplay.Entities
         private Transform[] _segments;
         private float _segmentLength;
         private int _rearIndex;
+        private bool _isRecycling;
 
         public void Initialize()
         {
@@ -20,15 +21,21 @@ namespace Gameplay.Entities
 
             _segmentLength = MeasureLength(_segments[0]);
             _rearIndex = 0;
+            _isRecycling = true;
 
             float rearZ = _target.position.z - _segmentLength;
             for (int i = 0; i < _segmentCount; i++)
                 _segments[i].position = SegmentPosition(rearZ + i * _segmentLength);
         }
 
+        public void StopRecycling()
+        {
+            _isRecycling = false;
+        }
+
         private void Update()
         {
-            if (_segments == null)
+            if (!_isRecycling || _segments == null)
                 return;
 
             Transform rearmost = _segments[_rearIndex];

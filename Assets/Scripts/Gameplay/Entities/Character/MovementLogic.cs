@@ -9,6 +9,7 @@ namespace Gameplay.Entities.Character
         [SerializeField] private float _speed = 8f;
         [SerializeField] private float _swayAmplitude = 3f;
         [SerializeField] private float _swayFrequency = 0.04f;
+        [SerializeField, Min(0f)] private float _rotationResponsiveness = 18f;
 
         private float _distance;
         private float _lateral;
@@ -16,7 +17,6 @@ namespace Gameplay.Entities.Character
         private bool _isFinishAligned;
         private float _alignmentStartDistance;
         private float _alignmentDistance;
-        private float _alignmentStartX;
         private float _alignmentTargetX;
 
         public float Distance => _distance;
@@ -32,10 +32,12 @@ namespace Gameplay.Entities.Character
             body.position += new Vector3(lateralDelta, 0f, forwardDelta);
 
             float yaw = Mathf.Atan2(lateralDelta, forwardDelta) * Mathf.Rad2Deg;
-            body.rotation = Quaternion.Euler(0f, yaw, 0f);
+            Quaternion targetRotation = Quaternion.Euler(0f, yaw, 0f);
+            float rotationBlend = 1f - Mathf.Exp(-_rotationResponsiveness * deltaTime);
+            body.rotation = Quaternion.Slerp(body.rotation, targetRotation, rotationBlend);
         }
 
-        public void BeginFinishAlignment(Transform body, float targetX, float alignmentDistance)
+        public void BeginFinishAlignment(float targetX, float alignmentDistance)
         {
             if (_isFinishAlignmentActive || _isFinishAligned)
                 return;
@@ -43,7 +45,6 @@ namespace Gameplay.Entities.Character
             _isFinishAlignmentActive = true;
             _alignmentStartDistance = _distance;
             _alignmentDistance = Mathf.Max(0.01f, alignmentDistance);
-            _alignmentStartX = body.position.x;
             _alignmentTargetX = targetX;
         }
 
@@ -61,7 +62,7 @@ namespace Gameplay.Entities.Character
             float progress = Mathf.Clamp01(
                 (_distance - _alignmentStartDistance) / _alignmentDistance);
             float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
-            float targetX = Mathf.Lerp(_alignmentStartX, _alignmentTargetX, easedProgress);
+            float targetX = Mathf.Lerp(SampleLateral(), _alignmentTargetX, easedProgress);
 
             if (progress >= 1f)
             {

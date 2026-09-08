@@ -42,8 +42,6 @@ public class GameManager : IDisposable
 
     internal void LateUpdate()
     {
-        _cutsceneManager.LateUpdate();
-
         if (!_gameplayStarted)
             return;
 
@@ -104,6 +102,7 @@ public class GameManager : IDisposable
     public void Dispose()
     {
         _cutsceneManager.Completed -= StartGameplay;
+        _cutsceneManager.Dispose();
 
         _uiManager.OnPlay -= Play;
         _uiManager.OnPause -= Pause;

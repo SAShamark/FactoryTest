@@ -5,7 +5,7 @@ using UnityEngine.Playables;
 namespace Gameplay.Intro
 {
     [Serializable]
-    public class CutsceneManager
+    public class CutsceneManager : IDisposable
     {
         [SerializeField] private PlayableDirector _director;
         [SerializeField] private Animator _actor;
@@ -23,6 +23,7 @@ namespace Gameplay.Intro
             _director.playOnAwake = false;
             _director.timeUpdateMode = DirectorUpdateMode.UnscaledGameTime;
             _director.extrapolationMode = DirectorWrapMode.None;
+            _director.stopped += HandleDirectorStopped;
             _actor.gameObject.SetActive(true);
             _actor.applyRootMotion = false;
             _actor.updateMode = AnimatorUpdateMode.UnscaledTime;
@@ -36,21 +37,23 @@ namespace Gameplay.Intro
                 return;
 
             _hasStarted = true;
-            _cameraController.ActivateCutsceneCamera();
+            _cameraController.ActivateGameplayCameraImmediately();
             _director.time = 0d;
             _director.Play();
         }
 
-        internal void LateUpdate()
+        public void Dispose()
+        {
+            _director.stopped -= HandleDirectorStopped;
+        }
+
+        private void HandleDirectorStopped(PlayableDirector director)
         {
             if (!_hasStarted || _hasCompleted)
                 return;
 
-            if (_director.state == PlayState.Playing && _director.time < _director.duration)
-                return;
-
             _hasCompleted = true;
-            _cameraController.ActivateGameplayCamera();
+            _cameraController.ActivateGameplayCameraImmediately();
             Completed?.Invoke();
         }
     }

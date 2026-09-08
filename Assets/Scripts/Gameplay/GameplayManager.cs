@@ -30,6 +30,8 @@ namespace Gameplay
         [SerializeField, Min(0f)] private float _gateOpenDistance = 22f;
         [SerializeField, Min(0f)] private float _cameraFreezeDistance = 18f;
         [SerializeField, Min(0f)] private float _victoryPresentationDuration = 2f;
+        [SerializeField, Min(0f)] private float _victoryExitViewportMargin = 0.15f;
+        [SerializeField, Min(0f)] private float _victoryMaximumDriveDuration = 5f;
 
         private bool _isTimeRamping;
         private float _timeRampElapsed;
@@ -184,10 +186,12 @@ namespace Gameplay
             _isShootingAllowed = false;
             _character.StopShooting();
             _enemySpawner.StopAndDespawnAllEnemies();
+            _environmentControl.StopGroundRecycling();
             _environmentControl.CloseFinishGate();
 
             _victorySequenceElapsed = 0f;
             _isPlayingVictorySequence = true;
+            LevelCompleted?.Invoke();
 
             if (_victoryPresentationDuration <= 0f)
                 CompleteVictorySequence();
@@ -197,15 +201,23 @@ namespace Gameplay
         {
             _victorySequenceElapsed += Time.unscaledDeltaTime;
 
-            if (_victorySequenceElapsed >= _victoryPresentationDuration)
+            if (_victorySequenceElapsed < _victoryPresentationDuration)
+                return;
+
+            bool exitedViewport = _cameraController == null
+                || _cameraController.HasFollowingTargetExitedViewport(_victoryExitViewportMargin);
+            bool timedOut = _victoryMaximumDriveDuration <= 0f
+                || _victorySequenceElapsed >= _victoryMaximumDriveDuration;
+
+            if (exitedViewport || timedOut)
                 CompleteVictorySequence();
         }
 
         private void CompleteVictorySequence()
         {
             _isPlayingVictorySequence = false;
-            Time.timeScale = 0f;
-            LevelCompleted?.Invoke();
+            _character.StopGameplay();
+            Time.timeScale = 1f;
         }
 
         private void UpdateDeathSequence()

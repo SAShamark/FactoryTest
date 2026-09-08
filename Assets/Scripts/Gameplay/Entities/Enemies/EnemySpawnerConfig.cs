@@ -29,6 +29,7 @@ namespace Gameplay.Enemies
         [SerializeField, Min(0f)] private float _spawnDistance = 42f;
         [SerializeField, Min(0f)] private float _spawnDistanceJitter = 8f;
         [SerializeField, Min(0f)] private float _forwardSpacingInWave = 3f;
+        [SerializeField, Range(0f, 0.5f)] private float _spawnViewportPadding = 0.08f;
         [SerializeField, Min(0f)] private float _minimumSpawnAheadDistance = 8f;
         [SerializeField, Min(0f)] private float _despawnDistanceBehindTarget = 14f;
         [SerializeField] private float _spawnY = 0f;
@@ -37,12 +38,16 @@ namespace Gameplay.Enemies
         [Header("Chase")]
         [SerializeField, Min(0f)] private float _activationDistance = 18f;
         [SerializeField, Min(0f)] private float _moveSpeed = 5.5f;
-        [SerializeField, Min(0f)] private float _catchUpDistanceBehindTarget = 1.5f;
-        [SerializeField, Min(0f)] private float _catchUpMoveSpeed = 11f;
         [SerializeField, Min(0f)] private float _rotationSpeed = 360f;
 
+        [Header("Idle Wander")]
+        [SerializeField, Min(0f)] private float _wanderSpeed = 1.25f;
+        [SerializeField, Min(0f)] private float _wanderMinPause = 1.2f;
+        [SerializeField, Min(0f)] private float _wanderMaxPause = 2.5f;
+        [SerializeField, Min(0.1f)] private float _wanderMinMoveDuration = 0.8f;
+        [SerializeField, Min(0.1f)] private float _wanderMaxMoveDuration = 1.8f;
+
         [Header("Contact Damage")]
-        [SerializeField, Min(0f)] private float _contactDistance = 1.4f;
         [SerializeField, Min(0f)] private float _contactDamage = 15f;
 
         [Header("Death Sequence")]
@@ -54,18 +59,32 @@ namespace Gameplay.Enemies
         public float SpawnDistance => _spawnDistance;
         public float SpawnDistanceJitter => _spawnDistanceJitter;
         public float ForwardSpacingInWave => _forwardSpacingInWave;
+        public float SpawnViewportPadding => _spawnViewportPadding;
         public float MinimumSpawnAheadDistance => _minimumSpawnAheadDistance;
         public float DespawnDistanceBehindTarget => _despawnDistanceBehindTarget;
         public float SpawnY => _spawnY;
         public float EnemyYaw => _enemyYaw;
         public float ActivationDistance => _activationDistance;
-        public float ContactDistance => _contactDistance;
         public float ContactDamage => _contactDamage;
         public float MoveSpeed => _moveSpeed;
-        public float CatchUpDistanceBehindTarget => _catchUpDistanceBehindTarget;
-        public float CatchUpMoveSpeed => _catchUpMoveSpeed;
         public float RotationSpeed => _rotationSpeed;
+        public float RoadHalfWidth => _roadHalfWidth;
+        public float WanderSpeed => _wanderSpeed;
         public int LaneCount => Mathf.Max(1, _laneCount);
+
+        public float GetWanderPauseDuration()
+        {
+            return Random.Range(
+                Mathf.Min(_wanderMinPause, _wanderMaxPause),
+                Mathf.Max(_wanderMinPause, _wanderMaxPause));
+        }
+
+        public float GetWanderMoveDuration()
+        {
+            return Random.Range(
+                Mathf.Min(_wanderMinMoveDuration, _wanderMaxMoveDuration),
+                Mathf.Max(_wanderMinMoveDuration, _wanderMaxMoveDuration));
+        }
 
         public float GetDeathSurroundRadius()
         {

@@ -1,7 +1,9 @@
+using System;
 using DG.Tweening;
 using Gameplay.Entities.BaseUnit;
 using Services.ObjectPool;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Gameplay.Entities.Enemies
 {
@@ -26,19 +28,27 @@ namespace Gameplay.Entities.Enemies
         private Transform _target;
         private BaseUnitControl _targetUnit;
         private bool _isChasing;
+        private bool _hasDealtContactDamage;
         private bool _isRunAnimationPlaying;
         private float _activationDistanceSqr;
-        private float _contactDistanceSqr;
         private float _contactDamage;
         private float _moveSpeed;
-        private float _catchUpDistanceBehindTarget;
-        private float _catchUpMoveSpeed;
         private float _rotationSpeed;
+        private float _roadHalfWidth;
+        private float _wanderSpeed;
+        private float _wanderPauseDuration;
+        private float _wanderMoveDuration;
+        private float _wanderTimer;
+        private bool _isWandering;
+        private Vector3 _wanderDestination;
         private bool _isSurrounding;
         private Vector3 _surroundOffset;
         private Collider[] _colliders;
         private Vector3 _defaultScale;
         private Tween _deathTween;
+        private FloatingTextControl _floatingText;
+
+        public event Action KilledByPlayer;
 
         protected override void Awake()
         {
@@ -57,6 +67,7 @@ namespace Gameplay.Entities.Enemies
             _target = null;
             _targetUnit = null;
             _isChasing = false;
+            _hasDealtContactDamage = false;
             _isSurrounding = false;
             SetCollidersEnabled(true);
 
@@ -67,19 +78,24 @@ namespace Gameplay.Entities.Enemies
         }
 
         public void Spawn(Vector3 position, Quaternion rotation, Transform target, float activationDistance,
-            float contactDistance, float contactDamage, float moveSpeed, float catchUpDistanceBehindTarget,
-            float catchUpMoveSpeed, float rotationSpeed)
+            float contactDamage, float moveSpeed, float rotationSpeed, float roadHalfWidth,
+            float wanderSpeed, float wanderPauseDuration, float wanderMoveDuration,
+            FloatingTextControl floatingText)
         {
             Spawn(position, rotation);
             _target = target;
             _targetUnit = target.GetComponentInParent<BaseUnitControl>();
             _activationDistanceSqr = activationDistance * activationDistance;
-            _contactDistanceSqr = contactDistance * contactDistance;
             _contactDamage = contactDamage;
             _moveSpeed = moveSpeed;
-            _catchUpDistanceBehindTarget = catchUpDistanceBehindTarget;
-            _catchUpMoveSpeed = catchUpMoveSpeed;
             _rotationSpeed = rotationSpeed;
+            _roadHalfWidth = roadHalfWidth;
+            _wanderSpeed = wanderSpeed;
+            _wanderPauseDuration = wanderPauseDuration;
+            _wanderMoveDuration = wanderMoveDuration;
+            _floatingText = floatingText;
+            _isWandering = false;
+            _wanderTimer = _wanderPauseDuration;
         }
 
         private void Update()
@@ -96,18 +112,47 @@ namespace Gameplay.Entities.Enemies
             Vector3 toTarget = _target.position - transform.position;
             toTarget.y = 0f;
 
-            if (TryExplodeIntoTarget(toTarget))
-                return;
-
             if (!_isChasing)
             {
                 if (toTarget.sqrMagnitude > _activationDistanceSqr)
+                {
+                    UpdateIdleWander();
                     return;
+                }
 
                 _isChasing = true;
+                _isWandering = false;
             }
 
             MoveToTarget(toTarget);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            TryDamageTarget(other);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            // The car may become alive while already overlapping this enemy.
+            TryDamageTarget(other);
+        }
+
+        private void TryDamageTarget(Collider other)
+        {
+            if (!IsAlive || _hasDealtContactDamage || _isSurrounding
+                || _targetUnit == null || !_targetUnit.IsAlive)
+                return;
+
+            if (other.GetComponentInParent<BaseUnitControl>() != _targetUnit)
+                return;
+
+            // Reserve the hit before health/death callbacks or another collider can trigger it again.
+            _hasDealtContactDamage = true;
+            BaseUnitControl targetUnit = _targetUnit;
+            targetUnit.PlayHitFeedback(transform.position);
+            targetUnit.ApplyDamage(_contactDamage);
+            Die();
         }
 
         public void BeginSurrounding(Vector3 offset)
@@ -148,6 +193,55 @@ namespace Gameplay.Entities.Enemies
 
         private void MoveToTarget(Vector3 toTarget)
         {
+            Move(toTarget, _moveSpeed);
+        }
+
+        private void UpdateIdleWander()
+        {
+            _wanderTimer -= Time.deltaTime;
+
+            if (_isWandering)
+            {
+                Vector3 toDestination = _wanderDestination - transform.position;
+                toDestination.y = 0f;
+
+                if (_wanderTimer <= 0f || toDestination.sqrMagnitude <= 0.01f)
+                {
+                    _isWandering = false;
+                    _wanderTimer = _wanderPauseDuration;
+                    SetRunAnimation(false);
+                    return;
+                }
+
+                Move(toDestination, _wanderSpeed);
+                return;
+            }
+
+            if (_wanderTimer > 0f)
+                return;
+
+            BeginIdleWander();
+        }
+
+        private void BeginIdleWander()
+        {
+            const float colliderPadding = 0.5f;
+            float minX = -Mathf.Max(0f, _roadHalfWidth - colliderPadding);
+            float maxX = Mathf.Max(0f, _roadHalfWidth - colliderPadding);
+            float direction = Random.value < 0.5f ? -1f : 1f;
+            float distance = _wanderSpeed * _wanderMoveDuration;
+            float targetX = Mathf.Clamp(transform.position.x + direction * distance, minX, maxX);
+
+            if (Mathf.Abs(targetX - transform.position.x) < 0.1f)
+                targetX = Mathf.Clamp(transform.position.x - direction * distance, minX, maxX);
+
+            _wanderDestination = new Vector3(targetX, transform.position.y, transform.position.z);
+            _wanderTimer = _wanderMoveDuration;
+            _isWandering = true;
+        }
+
+        private void Move(Vector3 toTarget, float speed)
+        {
             if (toTarget.sqrMagnitude <= 0.01f)
             {
                 SetRunAnimation(false);
@@ -156,11 +250,7 @@ namespace Gameplay.Entities.Enemies
 
             SetRunAnimation(true);
             Vector3 direction = toTarget.normalized;
-            float moveSpeed = _moveSpeed;
-            if (_target != null && _target.position.z - transform.position.z > _catchUpDistanceBehindTarget)
-                moveSpeed = Mathf.Max(moveSpeed, _catchUpMoveSpeed);
-
-            transform.position += direction * (moveSpeed * Time.deltaTime);
+            transform.position += direction * (speed * Time.deltaTime);
 
             Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(
@@ -169,28 +259,26 @@ namespace Gameplay.Entities.Enemies
                 _rotationSpeed * Time.deltaTime);
         }
 
-        private bool TryExplodeIntoTarget(Vector3 toTarget)
-        {
-            if (toTarget.sqrMagnitude > _contactDistanceSqr)
-                return false;
-
-            if (_targetUnit != null && _targetUnit.IsAlive)
-            {
-                _targetUnit.PlayHitFeedback(transform.position);
-                _targetUnit.ApplyDamage(_contactDamage);
-            }
-
-            Die();
-            return true;
-        }
-
         public void Hit(float damage, Vector3 hitPosition)
         {
-            if (!IsAlive)
+            if (!IsAlive || damage <= 0f)
                 return;
 
+            float appliedDamage = Mathf.Min(damage, Health.CurrentHealth);
+            bool isLethal = appliedDamage >= Health.CurrentHealth;
             PlayHitFeedback(hitPosition);
             ApplyDamage(damage);
+
+            Vector3 textPosition = transform.position + Vector3.up * 2.2f;
+            if (isLethal)
+            {
+                KilledByPlayer?.Invoke();
+                _floatingText?.ShowReward(textPosition);
+            }
+            else
+            {
+                _floatingText?.ShowDamage(appliedDamage, textPosition);
+            }
         }
 
         public void Despawn()
@@ -198,6 +286,7 @@ namespace Gameplay.Entities.Enemies
             _target = null;
             _targetUnit = null;
             _isChasing = false;
+            _isWandering = false;
             _isSurrounding = false;
             SetRunAnimation(false);
 
@@ -220,6 +309,7 @@ namespace Gameplay.Entities.Enemies
             _target = null;
             _targetUnit = null;
             _isChasing = false;
+            _isWandering = false;
             _isSurrounding = false;
             SetCollidersEnabled(false);
             SetRunAnimation(false);

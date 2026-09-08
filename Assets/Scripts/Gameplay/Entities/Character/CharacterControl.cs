@@ -17,12 +17,14 @@ namespace Gameplay.Entities.Character
 
         private bool _isMoving;
         private bool _isShooting;
+        private bool _hasAimInput;
 
         public float TravelledDistance => _movementLogic.Distance;
 
         private void Start()
         {
             _turretShooter.Initialize();
+            _turretAimLogic.Initialize(transform, _turret);
         }
 
         private void Update()
@@ -30,10 +32,14 @@ namespace Gameplay.Entities.Character
             if (_isMoving)
                 _movementLogic.Tick(transform, Time.deltaTime);
 
-            if (TryGetAimPoint(out Vector3 aimPoint))
+            if (_isMoving && TryGetAimPoint(out Vector3 aimPoint))
+            {
+                _hasAimInput = true;
                 _turretAimLogic.SetTarget(transform, aimPoint);
+            }
 
-            _turretAimLogic.Tick(transform, _turret, Time.deltaTime);
+            if (_hasAimInput)
+                _turretAimLogic.Tick(transform, _turret, Time.deltaTime);
         }
 
         private void LateUpdate()
@@ -66,7 +72,7 @@ namespace Gameplay.Entities.Character
 
         public void BeginFinishAlignment(float targetX, float alignmentDistance)
         {
-            _movementLogic.BeginFinishAlignment(transform, targetX, alignmentDistance);
+            _movementLogic.BeginFinishAlignment(targetX, alignmentDistance);
         }
 
         public override void PlayHitFeedback(Vector3 hitPosition)
@@ -84,6 +90,10 @@ namespace Gameplay.Entities.Character
                 return false;
 
             if (pointer is Touchscreen && !pointer.press.isPressed)
+                return false;
+
+            if (pointer is Mouse mouse && !mouse.leftButton.isPressed
+                && mouse.delta.ReadValue().sqrMagnitude <= 0.001f)
                 return false;
 
             Ray ray = _camera.ScreenPointToRay(pointer.position.ReadValue());

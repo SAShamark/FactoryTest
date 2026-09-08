@@ -13,6 +13,13 @@ namespace Gameplay.Entities.Character
 
         public float Angle { get; private set; }
 
+        public void Initialize(Transform body, Transform turret)
+        {
+            Quaternion localRotation = Quaternion.Inverse(body.rotation) * turret.rotation;
+            Angle = Mathf.Clamp(Mathf.DeltaAngle(0f, localRotation.eulerAngles.y), -_maxAngle, _maxAngle);
+            _targetAngle = Angle;
+        }
+
         public void SetTarget(Transform body, Vector3 aimPoint)
         {
             Vector3 localPoint = body.InverseTransformPoint(aimPoint);

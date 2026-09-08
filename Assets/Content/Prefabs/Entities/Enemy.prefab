@@ -389,6 +389,7 @@ GameObject:
   - component: {fileID: 6463198228005416732}
   - component: {fileID: 7806806079220152665}
   - component: {fileID: 7346816722053741093}
+  - component: {fileID: -225668940511221836}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -439,8 +440,7 @@ MonoBehaviour:
     _pulseScaleMultiplier: 1.12
     _pulseInDuration: 0.05
     _pulseOutDuration: 0.08
-  _deathEffectPrefab: {fileID: 7839052585181529169}
-  _deathEffectOffset: {x: 0, y: 0.9, z: 0}
+  _deathEffect: {fileID: 7839052585166560561}
   _deathJumpDistance: 0.7
   _deathJumpHeight: 0.8
   _deathDuration: 0.3
@@ -460,7 +460,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -468,6 +468,33 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!54 &-225668940511221836
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950442037443284760}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &2127750972206982068
 GameObject:
   m_ObjectHideFlags: 0
@@ -1722,9 +1749,9 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1 &7839052585181529169 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5880797563127281583, guid: 265d3a5ba69981a4698ceabcedf368b0, type: 3}
+--- !u!198 &7839052585166560561 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 5880797563141009103, guid: 265d3a5ba69981a4698ceabcedf368b0, type: 3}
   m_PrefabInstance: {fileID: 4419477035759793150}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &7839052585181763697 stripped

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Gameplay.Enemies;
+using Gameplay.Entities.BaseUnit;
 using Services.ObjectPool;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -18,6 +19,8 @@ namespace Gameplay.Entities.Enemies
         private readonly List<EnemyControl> _aliveEnemies = new();
         private readonly List<int> _availableLanes = new();
         private ObjectPool<EnemyControl> _enemyPool;
+        private Camera _viewCamera;
+        private FloatingTextControl _floatingText;
         private bool _isInitialized;
         private bool _isSpawning;
         private bool _hasSpawnLimit;
@@ -49,6 +52,12 @@ namespace Gameplay.Entities.Enemies
 
             if (_config != null && _enemyPrefab != null)
                 _enemyPool = new ObjectPool<EnemyControl>(_enemyPrefab, _config.InitialPoolSize, _enemyContainer);
+
+            if (_target != null)
+            {
+                _floatingText = _target.GetComponentInChildren<FloatingTextControl>(true);
+                _floatingText?.SetAsTemplate();
+            }
 
             _spawnTimer = _config != null ? _config.InitialDelay : 0f;
             _isInitialized = true;
@@ -108,7 +117,13 @@ namespace Gameplay.Entities.Enemies
 
         internal void LateUpdate()
         {
-            if (!_isSpawning || _config == null || _target == null || _enemyPool == null)
+            if (_config == null || _target == null || _enemyPool == null)
+                return;
+
+            CleanupInactiveEnemies();
+            DespawnEnemiesBehindTarget();
+
+            if (!_isSpawning)
                 return;
 
             if (HasNoSpawnSpace())
@@ -118,9 +133,6 @@ namespace Gameplay.Entities.Enemies
             }
 
             _elapsedSeconds += Time.deltaTime;
-
-            CleanupInactiveEnemies();
-            DespawnEnemiesBehindTarget();
             TickSpawning();
         }
 
@@ -152,13 +164,21 @@ namespace Gameplay.Entities.Enemies
             RefillLaneBag();
 
             for (int i = 0; i < spawnCount; i++)
-                SpawnEnemy(i);
+            {
+                if (!SpawnEnemy(i))
+                {
+                    StopSpawn();
+                    break;
+                }
+            }
         }
 
-        private void SpawnEnemy(int waveIndex)
+        private bool SpawnEnemy(int waveIndex)
         {
+            if (!TryGetSpawnPosition(waveIndex, out Vector3 position))
+                return false;
+
             EnemyControl enemy = _enemyPool.GetFreeElement();
-            Vector3 position = GetSpawnPosition(waveIndex);
             Quaternion rotation = Quaternion.Euler(0f, _config.EnemyYaw, 0f);
 
             enemy.Spawn(
@@ -166,15 +186,18 @@ namespace Gameplay.Entities.Enemies
                 rotation,
                 _target,
                 _config.ActivationDistance,
-                _config.ContactDistance,
                 _config.ContactDamage,
                 _config.MoveSpeed,
-                _config.CatchUpDistanceBehindTarget,
-                _config.CatchUpMoveSpeed,
-                _config.RotationSpeed);
-            enemy.Died -= HandleEnemyKilled;
-            enemy.Died += HandleEnemyKilled;
+                _config.RotationSpeed,
+                _config.RoadHalfWidth,
+                _config.WanderSpeed,
+                _config.GetWanderPauseDuration(),
+                _config.GetWanderMoveDuration(),
+                _floatingText);
+            enemy.KilledByPlayer -= HandleEnemyKilled;
+            enemy.KilledByPlayer += HandleEnemyKilled;
             _aliveEnemies.Add(enemy);
+            return true;
         }
 
         private void HandleEnemyKilled()
@@ -182,21 +205,60 @@ namespace Gameplay.Entities.Enemies
             EnemyKilled?.Invoke();
         }
 
-        private Vector3 GetSpawnPosition(int waveIndex)
+        private bool TryGetSpawnPosition(int waveIndex, out Vector3 position)
         {
             int lane = TakeRandomLane();
             float x = _config.GetLaneOffset(lane);
             float z = _target.position.z + _config.SpawnDistance;
             z += Random.Range(-_config.SpawnDistanceJitter, _config.SpawnDistanceJitter);
             z += waveIndex * _config.ForwardSpacingInWave;
+            float maxSpawnZ = float.PositiveInfinity;
 
             if (_hasSpawnLimit)
             {
-                float waveMaxZ = _maxSpawnZ - waveIndex * _config.ForwardSpacingInWave;
-                z = Mathf.Min(z, waveMaxZ);
+                maxSpawnZ = _maxSpawnZ - waveIndex * _config.ForwardSpacingInWave;
+                z = Mathf.Min(z, maxSpawnZ);
             }
 
-            return new Vector3(x, _config.SpawnY, z);
+            position = new Vector3(x, _config.SpawnY, z);
+            return MoveSpawnOutsideCameraView(ref position, maxSpawnZ);
+        }
+
+        private bool MoveSpawnOutsideCameraView(ref Vector3 position, float maxSpawnZ)
+        {
+            Camera viewCamera = GetViewCamera();
+            if (viewCamera == null)
+                return true;
+
+            float padding = _config.SpawnViewportPadding;
+            float step = Mathf.Max(1f, _config.ForwardSpacingInWave);
+
+            for (int i = 0; i < 32; i++)
+            {
+                Vector3 viewportPosition = viewCamera.WorldToViewportPoint(position);
+                bool isVisible = viewportPosition.z > 0f
+                    && viewportPosition.x >= -padding && viewportPosition.x <= 1f + padding
+                    && viewportPosition.y >= -padding && viewportPosition.y <= 1f + padding;
+
+                if (!isVisible)
+                    return true;
+
+                float nextZ = position.z + step;
+                if (nextZ > maxSpawnZ)
+                    return false;
+
+                position.z = nextZ;
+            }
+
+            return false;
+        }
+
+        private Camera GetViewCamera()
+        {
+            if (_viewCamera == null)
+                _viewCamera = Camera.main;
+
+            return _viewCamera;
         }
 
         private int TakeRandomLane()

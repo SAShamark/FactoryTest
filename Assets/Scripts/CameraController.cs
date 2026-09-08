@@ -7,7 +7,10 @@ public class CameraController : MonoBehaviour
 
     [SerializeField] private CinemachineCamera _gameplayCamera;
     [SerializeField] private CinemachineCamera _menuCamera;
+    [SerializeField] private CinemachineBrain _brain;
     [SerializeField] private Transform _following;
+    [SerializeField] private int _livePriority = 10;
+    [SerializeField] private int _standbyPriority = 0;
 
     [Header("Shake")]
     [SerializeField, Min(0f)] private float _damageShakeStrength = 0.45f;
@@ -15,7 +18,6 @@ public class CameraController : MonoBehaviour
     [SerializeField, Min(0f)] private float _deathShakeStrength = 1f;
     [SerializeField, Min(0.01f)] private float _deathShakeDuration = 1.1f;
 
-    private CinemachineCamera _activeCamera;
     private CinemachineImpulseDefinition _damageImpulse;
     private CinemachineImpulseDefinition _deathImpulse;
     private Transform _frozenFollowTarget;
@@ -23,8 +25,9 @@ public class CameraController : MonoBehaviour
     private void Awake()
     {
         Follow(_following);
-        _activeCamera = GetActiveCamera();
         InitializeShake();
+
+        SwitchCamera(_menuCamera);
     }
 
     public void Follow(Transform following)
@@ -33,14 +36,19 @@ public class CameraController : MonoBehaviour
         SetGameplayCameraTarget(following);
     }
 
-    public void ActivateCutsceneCamera()
-    {
-        SwitchCamera(_menuCamera);
-    }
-
     public void ActivateGameplayCamera()
     {
         SwitchCamera(_gameplayCamera);
+    }
+
+    public void ActivateGameplayCameraImmediately()
+    {
+        ActivateGameplayCamera();
+
+        // Timeline owns the cinematic blend. Clear the underlying gameplay blend,
+        // which otherwise stays frozen while Time.timeScale is zero.
+        if (_brain != null)
+            _brain.ResetState();
     }
 
     public void FreezeGameplayCamera()
@@ -56,6 +64,19 @@ public class CameraController : MonoBehaviour
 
         _frozenFollowTarget.SetPositionAndRotation(_following.position, _following.rotation);
         SetGameplayCameraTarget(_frozenFollowTarget);
+    }
+
+    public bool HasFollowingTargetExitedViewport(float margin)
+    {
+        if (_following == null)
+            return false;
+
+        Camera outputCamera = _brain != null ? _brain.OutputCamera : Camera.main;
+        if (outputCamera == null)
+            return false;
+
+        Vector3 viewportPosition = outputCamera.WorldToViewportPoint(_following.position);
+        return viewportPosition.z <= 0f || viewportPosition.y > 1f + Mathf.Max(0f, margin);
     }
 
     public void PlayDamageShake(Vector3 hitPosition)
@@ -79,22 +100,17 @@ public class CameraController : MonoBehaviour
         if (cameraToActivate == null)
             return;
 
-        if (_activeCamera != null && _activeCamera != cameraToActivate)
-            _activeCamera.gameObject.SetActive(false);
-
-        cameraToActivate.gameObject.SetActive(true);
-        _activeCamera = cameraToActivate;
+        ApplyPriority(_gameplayCamera, cameraToActivate == _gameplayCamera);
+        ApplyPriority(_menuCamera, cameraToActivate == _menuCamera);
     }
 
-    private CinemachineCamera GetActiveCamera()
+    private void ApplyPriority(CinemachineCamera cinemachineCamera, bool isLive)
     {
-        if (_gameplayCamera != null && _gameplayCamera.gameObject.activeSelf)
-            return _gameplayCamera;
+        if (cinemachineCamera == null)
+            return;
 
-        if (_menuCamera != null && _menuCamera.gameObject.activeSelf)
-            return _menuCamera;
-
-        return null;
+        cinemachineCamera.gameObject.SetActive(true);
+        cinemachineCamera.Priority = isLive ? _livePriority : _standbyPriority;
     }
 
     private void SetGameplayCameraTarget(Transform targetTransform)
