@@ -11,6 +11,7 @@ namespace Gameplay.Entities.BaseUnit
     {
         private readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private readonly int ColorId = Shader.PropertyToID("_Color");
+        private readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
 
         [SerializeField] private Transform _visualRoot;
         [SerializeField] private Transform _hitEffect;
@@ -26,7 +27,9 @@ namespace Gameplay.Entities.BaseUnit
 
         private Material[] _materials;
         private Color[] _defaultColors;
+        private Color[] _defaultEmissionColors;
         private int[] _colorPropertyIds;
+        private bool[] _hasEmission;
         private ParticleSystem _hitParticleSystem;
         private Tween _flashTween;
         private Tween _pulseTween;
@@ -56,12 +59,21 @@ namespace Gameplay.Entities.BaseUnit
 
             _materials = materials.ToArray();
             _defaultColors = new Color[_materials.Length];
+            _defaultEmissionColors = new Color[_materials.Length];
             _colorPropertyIds = new int[_materials.Length];
+            _hasEmission = new bool[_materials.Length];
 
             for (int i = 0; i < _materials.Length; i++)
             {
                 _colorPropertyIds[i] = _materials[i].HasProperty(BaseColorId) ? BaseColorId : ColorId;
                 _defaultColors[i] = _materials[i].GetColor(_colorPropertyIds[i]);
+                _hasEmission[i] = _materials[i].HasProperty(EmissionColorId);
+
+                if (_hasEmission[i])
+                {
+                    _defaultEmissionColors[i] = _materials[i].GetColor(EmissionColorId);
+                    RestoreEmission(i);
+                }
             }
 
             if (_hitEffect != null)
@@ -125,7 +137,21 @@ namespace Gameplay.Entities.BaseUnit
             for (int i = 0; i < _materials.Length; i++)
             {
                 _materials[i].SetColor(_colorPropertyIds[i], Color.Lerp(_defaultColors[i], _hitColor, _flashAmount));
+                RestoreEmission(i);
             }
+        }
+
+        private void RestoreEmission(int materialIndex)
+        {
+            if (!_hasEmission[materialIndex])
+                return;
+
+            Material material = _materials[materialIndex];
+            Color emissionColor = _defaultEmissionColors[materialIndex];
+            material.SetColor(EmissionColorId, emissionColor);
+
+            if (emissionColor.maxColorComponent > 0f)
+                material.EnableKeyword("_EMISSION");
         }
 
         public void Darken(float brightness, float duration)

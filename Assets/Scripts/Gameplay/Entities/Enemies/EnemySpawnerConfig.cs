@@ -9,7 +9,7 @@ namespace Gameplay.Enemies
         [SerializeField, Min(1)] private int _initialPoolSize = 72;
 
         [Header("Spawn Rate")]
-        [SerializeField, Min(0f)] private float _initialDelay = 0.75f;
+        [SerializeField, Min(0f)] private float _initialDelay = 0.15f;
         [SerializeField, Min(0.05f)] private float _startSpawnInterval = 1.35f;
         [SerializeField, Min(0.05f)] private float _minSpawnInterval = 0.45f;
         [SerializeField, Min(0f)] private float _spawnIntervalDecreasePerMinute = 0.25f;
@@ -26,6 +26,7 @@ namespace Gameplay.Enemies
         [SerializeField, Min(1)] private int _laneCount = 3;
         [SerializeField, Min(0f)] private float _roadHalfWidth = 3.5f;
         [SerializeField, Min(0f)] private float _laneJitter = 0.35f;
+        [SerializeField, Min(0f)] private float _initialSpawnDistance = 10f;
         [SerializeField, Min(0f)] private float _spawnDistance = 42f;
         [SerializeField, Min(0f)] private float _spawnDistanceJitter = 8f;
         [SerializeField, Min(0f)] private float _forwardSpacingInWave = 3f;
@@ -56,6 +57,7 @@ namespace Gameplay.Enemies
 
         public int InitialPoolSize => _initialPoolSize;
         public float InitialDelay => _initialDelay;
+        public float InitialSpawnDistance => _initialSpawnDistance;
         public float SpawnDistance => _spawnDistance;
         public float SpawnDistanceJitter => _spawnDistanceJitter;
         public float ForwardSpacingInWave => _forwardSpacingInWave;

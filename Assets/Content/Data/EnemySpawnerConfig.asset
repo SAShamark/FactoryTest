@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnemySpawnerConfig
   m_EditorClassIdentifier:
   _initialPoolSize: 36
-  _initialDelay: 0.75
+  _initialDelay: 0.15
   _startSpawnInterval: 1.35
   _minSpawnInterval: 0.45
   _spawnIntervalDecreasePerMinute: 0.25
@@ -26,6 +26,7 @@ MonoBehaviour:
   _laneCount: 3
   _roadHalfWidth: 3.5
   _laneJitter: 0.35
+  _initialSpawnDistance: 10
   _spawnDistance: 42
   _spawnDistanceJitter: 8
   _forwardSpacingInWave: 3

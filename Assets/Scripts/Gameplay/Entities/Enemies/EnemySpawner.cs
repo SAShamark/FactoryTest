@@ -23,6 +23,7 @@ namespace Gameplay.Entities.Enemies
         private FloatingTextControl _floatingText;
         private bool _isInitialized;
         private bool _isSpawning;
+        private bool _isInitialWavePending;
         private bool _hasSpawnLimit;
         private float _maxSpawnZ;
         private float _elapsedSeconds;
@@ -70,6 +71,7 @@ namespace Gameplay.Entities.Enemies
             if (resetProgress)
             {
                 _elapsedSeconds = 0f;
+                _isInitialWavePending = true;
                 DespawnAllEnemies();
             }
 
@@ -162,20 +164,26 @@ namespace Gameplay.Entities.Enemies
 
             int spawnCount = Mathf.Min(_config.GetSpawnCount(_elapsedSeconds), freeSlots);
             RefillLaneBag();
+            bool spawnedAnyEnemy = false;
 
             for (int i = 0; i < spawnCount; i++)
             {
-                if (!SpawnEnemy(i))
+                if (!SpawnEnemy(i, _isInitialWavePending))
                 {
                     StopSpawn();
                     break;
                 }
+
+                spawnedAnyEnemy = true;
             }
+
+            if (spawnedAnyEnemy)
+                _isInitialWavePending = false;
         }
 
-        private bool SpawnEnemy(int waveIndex)
+        private bool SpawnEnemy(int waveIndex, bool isInitialWave)
         {
-            if (!TryGetSpawnPosition(waveIndex, out Vector3 position))
+            if (!TryGetSpawnPosition(waveIndex, isInitialWave, out Vector3 position))
                 return false;
 
             EnemyControl enemy = _enemyPool.GetFreeElement();
@@ -205,12 +213,18 @@ namespace Gameplay.Entities.Enemies
             EnemyKilled?.Invoke();
         }
 
-        private bool TryGetSpawnPosition(int waveIndex, out Vector3 position)
+        private bool TryGetSpawnPosition(int waveIndex, bool isInitialWave, out Vector3 position)
         {
             int lane = TakeRandomLane();
             float x = _config.GetLaneOffset(lane);
-            float z = _target.position.z + _config.SpawnDistance;
-            z += Random.Range(-_config.SpawnDistanceJitter, _config.SpawnDistanceJitter);
+            float spawnDistance = isInitialWave
+                ? _config.InitialSpawnDistance
+                : _config.SpawnDistance;
+            float z = _target.position.z + spawnDistance;
+
+            if (!isInitialWave)
+                z += Random.Range(-_config.SpawnDistanceJitter, _config.SpawnDistanceJitter);
+
             z += waveIndex * _config.ForwardSpacingInWave;
             float maxSpawnZ = float.PositiveInfinity;
 
@@ -231,9 +245,9 @@ namespace Gameplay.Entities.Enemies
                 return true;
 
             float padding = _config.SpawnViewportPadding;
-            float step = Mathf.Max(1f, _config.ForwardSpacingInWave);
+            const float step = 1f;
 
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 64; i++)
             {
                 Vector3 viewportPosition = viewCamera.WorldToViewportPoint(position);
                 bool isVisible = viewportPosition.z > 0f
