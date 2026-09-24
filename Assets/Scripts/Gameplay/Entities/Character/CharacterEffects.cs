@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DG.Tweening;
+using Gameplay.CameraLogic;
 using Gameplay.Entities.BaseUnit;
 using UnityEngine;
 
@@ -46,11 +47,13 @@ namespace Gameplay.Entities.Character
         public void Die()
         {
             if (_isDead)
+            {
                 return;
+            }
 
             _isDead = true;
 
-            foreach (GameObject lightObject in _lights)
+            foreach (var lightObject in _lights)
                 lightObject.SetActive(false);
 
             _hitFeedback.Darken(_deadBrightness, _darkenDuration);
@@ -58,51 +61,37 @@ namespace Gameplay.Entities.Character
             PlayParticle(_boomEffect);
             ScatterWheels();
 
-            _smokeDelayTween = DOVirtual.DelayedCall(
-                    _deathSmokeDelay,
-                    () => PlayParticle(_dieEffect),
-                    true)
-                .SetLink(gameObject)
-                .OnComplete(() => _smokeDelayTween = null);
+            _smokeDelayTween = DOVirtual.DelayedCall(_deathSmokeDelay, () => PlayParticle(_dieEffect))
+                .SetLink(gameObject).OnComplete(() => _smokeDelayTween = null);
         }
 
         private void ScatterWheels()
         {
-            for (int i = 0; i < _wheels.Count; i++)
+            for (var i = 0; i < _wheels.Count; i++)
             {
-                GameObject wheelObject = _wheels[i];
-                if (wheelObject == null)
-                    continue;
-
-                Transform wheel = wheelObject.transform;
-                Vector3 localPosition = transform.InverseTransformPoint(wheel.position);
-                float side = Mathf.Approximately(localPosition.x, 0f)
+                var wheelObject = _wheels[i];
+                var wheel = wheelObject.transform;
+                var localPosition = transform.InverseTransformPoint(wheel.position);
+                var side = Mathf.Approximately(localPosition.x, 0f)
                     ? (i % 2 == 0 ? -1f : 1f)
                     : Mathf.Sign(localPosition.x);
-                float forward = i % 2 == 0 ? -0.35f : 0.35f;
+                var forward = i % 2 == 0 ? -0.35f : 0.35f;
 
-                Vector3 direction = (transform.right * side + transform.forward * forward).normalized;
-                Vector3 targetPosition = wheel.position + direction * _wheelFlyDistance;
+                var direction = (transform.right * side + transform.forward * forward).normalized;
+                var targetPosition = wheel.position + direction * _wheelFlyDistance;
 
                 wheel.SetParent(null, true);
-                wheel.DOJump(targetPosition, _wheelFlyHeight, 1, _wheelFlyDuration)
-                    .SetEase(Ease.OutCubic)
-                    .SetUpdate(true)
-                    .SetLink(wheelObject);
-                wheel.DORotate(
-                        new Vector3(Random.Range(220f, 420f),
-                            Random.Range(-180f, 180f),
-                            Random.Range(220f, 420f)), _wheelFlyDuration, RotateMode.FastBeyond360)
+                wheel.DOJump(targetPosition, _wheelFlyHeight, 1, _wheelFlyDuration).SetEase(Ease.OutCubic)
+                    .SetUpdate(true).SetLink(wheelObject);
+                wheel.DORotate(new Vector3(Random.Range(220f, 420f), Random.Range(-180f, 180f),
+                        Random.Range(220f, 420f)), _wheelFlyDuration, RotateMode.FastBeyond360)
                     .SetRelative().SetEase(Ease.OutQuad).SetUpdate(true).SetLink(wheelObject);
             }
         }
 
-        private static void PlayParticle(ParticleSystem effect)
+        private void PlayParticle(ParticleSystem effect)
         {
-            if (effect == null)
-                return;
-
-            ParticleSystem.MainModule main = effect.main;
+            var main = effect.main;
             main.useUnscaledTime = true;
 
             effect.gameObject.SetActive(true);

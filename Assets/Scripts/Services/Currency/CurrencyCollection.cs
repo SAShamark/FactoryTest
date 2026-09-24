@@ -15,7 +15,9 @@ namespace Services.Currency
             foreach (var item in _currencySprites)
             {
                 if (item.Type.Equals(type))
+                {
                     return item.Value;
+                }
             }
             Debug.LogWarning($"Sprite for CurrencyType {type} not found!");
             return null;

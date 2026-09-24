@@ -7,6 +7,13 @@ namespace Gameplay.Entities.Enemies
 {
     public class EnemyControl : BaseUnitControl
     {
+        private enum MovementState
+        {
+            Wandering,
+            Chasing,
+            Surrounding
+        }
+
         [SerializeField] private EnemyAnimationControl _animationControl;
         [SerializeField] private EnemyEffects _effects;
 
@@ -14,43 +21,32 @@ namespace Gameplay.Entities.Enemies
 
         private Transform _target;
         private BaseUnitControl _targetUnit;
-        private bool _isChasing;
-        private bool _isSurrounding;
-        private bool _hasDealtContactDamage;
+        private MovementState _movementState;
         private EnemyConfig _config;
-        private float _activationDistanceSqr;
         private Vector3 _surroundOffset;
         private Collider[] _colliders;
 
-        protected override HitFeedback HitFeedback => _effects != null ? _effects.HitFeedback : null;
+        protected override HitFeedback HitFeedback => _effects.HitFeedback;
 
         public event Action KilledByPlayer;
 
         protected override void Awake()
         {
-            if (_animationControl == null)
-                _animationControl = GetComponent<EnemyAnimationControl>();
-
-            if (_effects == null)
-                _effects = GetComponent<EnemyEffects>();
-
             base.Awake();
             _colliders = GetComponentsInChildren<Collider>(true);
         }
 
         public void Spawn(Vector3 position, Quaternion rotation)
         {
-            _effects?.ResetVisuals();
+            _effects.ResetVisuals();
             InitializeUnit();
             transform.SetPositionAndRotation(position, rotation);
             _target = null;
             _targetUnit = null;
-            _isChasing = false;
-            _isSurrounding = false;
-            _hasDealtContactDamage = false;
+            _movementState = MovementState.Wandering;
             SetCollidersEnabled(true);
-            _animationControl?.SetEnabled(true);
-            _animationControl?.SetRun(false);
+            _animationControl.SetEnabled(true);
+            _animationControl.SetRun(false);
         }
 
         public void Spawn(Vector3 position, Quaternion rotation, Transform target,
@@ -60,55 +56,59 @@ namespace Gameplay.Entities.Enemies
             _target = target;
             _targetUnit = target.GetComponentInParent<BaseUnitControl>();
             _config = config;
-            _activationDistanceSqr = config.ActivationDistance * config.ActivationDistance;
-            _effects?.SetFloatingText(floatingText);
+            _effects.SetFloatingText(floatingText);
             _movementLogic.Initialize(config);
         }
 
         private void Update()
         {
             if (_target == null)
-                return;
-
-            if (_isSurrounding)
             {
-                _animationControl?.SetRun(
-                    _movementLogic.Surround(transform, _target.position + _surroundOffset, _target.position));
+                return;
+            }
+
+            if (_movementState == MovementState.Surrounding)
+            {
+                _animationControl.SetRun(_movementLogic.Surround(
+                    transform, _target.position + _surroundOffset, _target.position));
                 return;
             }
 
             Vector3 toTarget = _target.position - transform.position;
             toTarget.y = 0f;
 
-            if (!_isChasing)
+            if (_movementState == MovementState.Wandering)
             {
-                if (toTarget.sqrMagnitude > _activationDistanceSqr)
+                if (toTarget.sqrMagnitude > _config.ActivationDistance * _config.ActivationDistance)
                 {
-                    _animationControl?.SetRun(_movementLogic.Wander(transform));
+                    _animationControl.SetRun(_movementLogic.Wander(transform));
                     return;
                 }
 
-                _isChasing = true;
+                _movementState = MovementState.Chasing;
                 _movementLogic.StopWander();
             }
 
-            _animationControl?.SetRun(_movementLogic.Chase(transform, toTarget));
+            _animationControl.SetRun(_movementLogic.Chase(transform, toTarget));
         }
 
         public void BeginSurrounding(Vector3 offset)
         {
             if (!IsAlive)
+            {
                 return;
+            }
 
-            _isSurrounding = true;
-            _isChasing = true;
+            _movementState = MovementState.Surrounding;
             _surroundOffset = offset;
         }
 
         public void Hit(float damage, Vector3 hitPosition)
         {
             if (!IsAlive || damage <= 0f)
+            {
                 return;
+            }
 
             float appliedDamage = Mathf.Min(damage, Health.CurrentHealth);
             bool isLethal = appliedDamage >= Health.CurrentHealth;
@@ -118,11 +118,11 @@ namespace Gameplay.Entities.Enemies
             if (isLethal)
             {
                 KilledByPlayer?.Invoke();
-                _effects?.ShowReward();
+                _effects.ShowReward();
             }
             else
             {
-                _effects?.ShowDamage(appliedDamage);
+                _effects.ShowDamage(appliedDamage);
             }
         }
 
@@ -130,40 +130,29 @@ namespace Gameplay.Entities.Enemies
         {
             _target = null;
             _targetUnit = null;
-            _isChasing = false;
-            _isSurrounding = false;
+            _movementState = MovementState.Wandering;
             _movementLogic.StopWander();
-            _animationControl?.SetRun(false);
+            _animationControl.SetRun(false);
 
-            if (TryGetComponent(out BasePoolDestroyable poolDestroyable))
-            {
-                poolDestroyable.DestroyObject();
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            GetComponent<BasePoolDestroyable>().DestroyObject();
         }
 
         protected override void Die()
         {
             if (!IsAlive)
+            {
                 return;
+            }
 
             MarkAsDead();
             _target = null;
             _targetUnit = null;
-            _isChasing = false;
-            _isSurrounding = false;
+            _movementState = MovementState.Wandering;
             _movementLogic.StopWander();
             SetCollidersEnabled(false);
-            _animationControl?.SetRun(false);
-            _animationControl?.SetEnabled(false);
-
-            if (_effects != null)
-                _effects.PlayDeath(Despawn);
-            else
-                Despawn();
+            _animationControl.SetRun(false);
+            _animationControl.SetEnabled(false);
+            _effects.PlayDeath(Despawn);
         }
 
         private void OnTriggerEnter(Collider other)
@@ -178,14 +167,15 @@ namespace Gameplay.Entities.Enemies
 
         private void TryDamageTarget(Collider other)
         {
-            if (!IsAlive || _hasDealtContactDamage || _isSurrounding
+            if (!IsAlive || _movementState == MovementState.Surrounding
                 || _targetUnit == null || !_targetUnit.IsAlive)
                 return;
 
             if (other.GetComponentInParent<BaseUnitControl>() != _targetUnit)
+            {
                 return;
+            }
 
-            _hasDealtContactDamage = true;
             BaseUnitControl targetUnit = _targetUnit;
             targetUnit.PlayHitFeedback(transform.position);
             targetUnit.ApplyDamage(_config.ContactDamage);
@@ -194,9 +184,6 @@ namespace Gameplay.Entities.Enemies
 
         private void SetCollidersEnabled(bool isEnabled)
         {
-            if (_colliders == null)
-                return;
-
             foreach (Collider enemyCollider in _colliders)
                 enemyCollider.enabled = isEnabled;
         }

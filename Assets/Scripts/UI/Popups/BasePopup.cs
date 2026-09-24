@@ -20,13 +20,17 @@ namespace UI.Popups
         protected virtual void Awake()
         {
             if (_closeButton != null)
+            {
                 _closeButton.onClick.AddListener(CloseTrigger);
+            }
         }
 
         protected virtual void OnDestroy()
         {
             if (_closeButton != null)
+            {
                 _closeButton.onClick.RemoveListener(CloseTrigger);
+            }
         }
     }
 }

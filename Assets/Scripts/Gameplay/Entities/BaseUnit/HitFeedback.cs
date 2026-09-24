@@ -39,9 +39,6 @@ namespace Gameplay.Entities.BaseUnit
 
         public void Initialize()
         {
-            if (_visualRoot == null)
-                return;
-
             _defaultVisualScale = _visualRoot.localScale;
 
             Renderer[] renderers = _visualRoot.GetComponentsInChildren<Renderer>(true);
@@ -76,24 +73,15 @@ namespace Gameplay.Entities.BaseUnit
                 }
             }
 
-            if (_hitEffect != null)
-            {
-                _hitParticleSystem = _hitEffect.GetComponent<ParticleSystem>();
-                _hitParticleSystem?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
+            _hitParticleSystem = _hitEffect.GetComponent<ParticleSystem>();
+            _hitParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         public void Play(Vector3 hitPosition)
         {
-            if (_visualRoot == null || _materials == null)
-                return;
-
-            if (_hitEffect != null && _hitParticleSystem != null)
-            {
-                _hitEffect.position = hitPosition;
-                _hitParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                _hitParticleSystem.Play(true);
-            }
+            _hitEffect.position = hitPosition;
+            _hitParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            _hitParticleSystem.Play(true);
 
             _flashTween?.Kill();
             _flashTween = DOTween.Sequence()
@@ -104,9 +92,7 @@ namespace Gameplay.Entities.BaseUnit
 
             _pulseTween?.Kill();
             _pulseTween = DOTween.Sequence()
-                .Append(_visualRoot.DOScale(
-                        _defaultVisualScale * _pulseScaleMultiplier,
-                        _pulseInDuration)
+                .Append(_visualRoot.DOScale(_defaultVisualScale * _pulseScaleMultiplier, _pulseInDuration)
                     .SetEase(Ease.OutQuad))
                 .Append(_visualRoot.DOScale(_defaultVisualScale, _pulseOutDuration)
                     .SetEase(Ease.InOutQuad)).OnComplete(() => _pulseTween = null).SetLink(_visualRoot.gameObject);
@@ -114,9 +100,6 @@ namespace Gameplay.Entities.BaseUnit
 
         public void Reset()
         {
-            if (_visualRoot == null || _materials == null)
-                return;
-
             _flashTween?.Kill();
             _pulseTween?.Kill();
             _darkenTween?.Kill();
@@ -144,21 +127,22 @@ namespace Gameplay.Entities.BaseUnit
         private void RestoreEmission(int materialIndex)
         {
             if (!_hasEmission[materialIndex])
+            {
                 return;
+            }
 
             Material material = _materials[materialIndex];
             Color emissionColor = _defaultEmissionColors[materialIndex];
             material.SetColor(EmissionColorId, emissionColor);
 
             if (emissionColor.maxColorComponent > 0f)
+            {
                 material.EnableKeyword("_EMISSION");
+            }
         }
 
         public void Darken(float brightness, float duration)
         {
-            if (_visualRoot == null || _materials == null)
-                return;
-
             _flashTween?.Kill();
             _darkenTween?.Kill();
 
@@ -172,11 +156,8 @@ namespace Gameplay.Entities.BaseUnit
                 Color targetColor = _defaultColors[i] * clampedBrightness;
                 targetColor.a = _defaultColors[i].a;
 
-                sequence.Join(DOTween.To(
-                    () => material.GetColor(propertyId),
-                    color => material.SetColor(propertyId, color),
-                    targetColor,
-                    duration));
+                sequence.Join(DOTween.To(() => material.GetColor(propertyId),
+                    color => material.SetColor(propertyId, color), targetColor, duration));
             }
 
             _darkenTween = sequence
@@ -191,9 +172,6 @@ namespace Gameplay.Entities.BaseUnit
             _flashTween?.Kill();
             _pulseTween?.Kill();
             _darkenTween?.Kill();
-
-            if (_materials == null)
-                return;
 
             foreach (var material in _materials)
             {

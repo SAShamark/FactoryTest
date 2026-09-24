@@ -25,13 +25,13 @@ namespace Gameplay.Entities.BaseUnit
         [SerializeField, Range(0.01f, 1f)] private float _fadeInDuration = 0.1f;
         [SerializeField, Range(0.01f, 1f)] private float _fadeOutDuration = 0.25f;
 
-        private Camera _camera;
+        private Transform _cameraTransform;
         private Sequence _sequence;
 
-        public void Play(string value, bool isReward, Vector3 worldPosition, Camera viewCamera)
+        public void Play(string value, bool isReward, Vector3 worldPosition, Transform cameraTransform)
         {
             _sequence?.Kill();
-            _camera = viewCamera;
+            _cameraTransform = cameraTransform;
 
             transform.position = worldPosition;
             _text.text = value;
@@ -45,8 +45,7 @@ namespace Gameplay.Entities.BaseUnit
             FaceCamera();
 
             Vector3 endPosition = worldPosition + Vector3.up * _riseDistance;
-            if (_camera != null)
-                endPosition += _camera.transform.right * Random.Range(-_horizontalDrift, _horizontalDrift);
+            endPosition += _cameraTransform.right * Random.Range(-_horizontalDrift, _horizontalDrift);
 
             float fadeOutStart = Mathf.Max(_fadeInDuration, _duration - _fadeOutDuration);
             _sequence = DOTween.Sequence();
@@ -54,11 +53,10 @@ namespace Gameplay.Entities.BaseUnit
             _sequence.Join(transform.DOScale(targetScale, Mathf.Min(0.22f, _duration * 0.35f))
                 .SetEase(Ease.OutBack));
             _sequence.Join(DOTween.To(SetAlpha, 0f, 1f, Mathf.Min(_fadeInDuration, _duration)));
-            _sequence.Insert(fadeOutStart,
-                DOTween.To(SetAlpha, 1f, 0f, Mathf.Min(_fadeOutDuration, _duration - fadeOutStart)));
-            _sequence.Insert(fadeOutStart,
-                transform.DOScale(targetScale * 0.8f, Mathf.Min(_fadeOutDuration, _duration - fadeOutStart))
-                    .SetEase(Ease.InQuad));
+            _sequence.Insert(fadeOutStart, DOTween.To(SetAlpha, 1f, 0f,
+                Mathf.Min(_fadeOutDuration, _duration - fadeOutStart)));
+            _sequence.Insert(fadeOutStart, transform.DOScale(targetScale * 0.8f,
+                Mathf.Min(_fadeOutDuration, _duration - fadeOutStart)).SetEase(Ease.InQuad));
             _sequence.SetLink(gameObject).OnComplete(ReturnToPool);
         }
 
@@ -66,10 +64,7 @@ namespace Gameplay.Entities.BaseUnit
         {
             _sequence = null;
 
-            if (TryGetComponent(out BasePoolDestroyable poolDestroyable))
-                poolDestroyable.DestroyObject();
-            else
-                gameObject.SetActive(false);
+            GetComponent<BasePoolDestroyable>().DestroyObject();
         }
 
         private void LateUpdate()
@@ -79,8 +74,7 @@ namespace Gameplay.Entities.BaseUnit
 
         private void FaceCamera()
         {
-            if (_camera != null)
-                transform.rotation = _camera.transform.rotation;
+            transform.rotation = _cameraTransform.rotation;
         }
 
         private void SetAlpha(float alpha)

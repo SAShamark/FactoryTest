@@ -32,15 +32,13 @@ namespace Gameplay.Entities.Enemies
 
         public float GetWanderPauseDuration()
         {
-            return Random.Range(
-                Mathf.Min(_wanderMinPause, _wanderMaxPause),
+            return Random.Range(Mathf.Min(_wanderMinPause, _wanderMaxPause),
                 Mathf.Max(_wanderMinPause, _wanderMaxPause));
         }
 
         public float GetWanderMoveDuration()
         {
-            return Random.Range(
-                Mathf.Min(_wanderMinMoveDuration, _wanderMaxMoveDuration),
+            return Random.Range(Mathf.Min(_wanderMinMoveDuration, _wanderMaxMoveDuration),
                 Mathf.Max(_wanderMinMoveDuration, _wanderMaxMoveDuration));
         }
     }

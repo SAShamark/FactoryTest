@@ -16,21 +16,17 @@ namespace Gameplay.Entities.Enemies
 
         public void SetEnabled(bool isEnabled)
         {
-            if (_animator == null)
-                return;
-
             _animator.enabled = isEnabled;
         }
 
         public void SetRun(bool isRun)
         {
-            if (_animator == null)
-                return;
-
             _animator.SetBool(IsRun, isRun);
 
             if (_isRunPlaying == isRun)
+            {
                 return;
+            }
 
             _isRunPlaying = isRun;
             _animator.CrossFade(isRun ? RunState : IdleState, CrossFadeDuration);

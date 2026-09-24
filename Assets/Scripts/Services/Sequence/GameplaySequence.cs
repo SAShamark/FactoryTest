@@ -4,8 +4,6 @@ namespace Services.Sequence
 {
     public class GameplaySequence : IGameplaySequence
     {
-        public float TimeScale => Time.timeScale;
-
         public void StartGame()
         {
             SetTimeScale(1f);

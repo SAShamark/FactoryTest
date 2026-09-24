@@ -1,4 +1,5 @@
 using Gameplay;
+using Gameplay.CameraLogic;
 using Gameplay.Entities.BaseUnit;
 using UI;
 using UnityEngine;
@@ -16,11 +17,9 @@ namespace Services.Installers
         public override void InstallBindings()
         {
             Container.BindInterfacesAndSelfTo<UIManager>().FromInstance(_uiManager).AsSingle();
-            Container.Bind<FloatingTextService>().FromInstance(new FloatingTextService(
-                _floatingTextPrefab,
-                _cameraController,
-                transform,
-                _floatingTextPoolSize)).AsSingle();
+            Container.Bind<FloatingTextService>().FromInstance(
+                new FloatingTextService(_floatingTextPrefab, _cameraController, transform, _floatingTextPoolSize))
+                .AsSingle();
         }
     }
 }

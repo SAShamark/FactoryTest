@@ -22,11 +22,8 @@ public class GameManager : IDisposable
     private bool _hasStarted;
     private bool _gameplayStarted;
 
-    public void Initialize(
-        CurrencyService currencyService,
-        IGameplaySequence gameplaySequence,
-        UIManager uiManager,
-        FloatingTextService floatingTextService)
+    public void Initialize(CurrencyService currencyService, IGameplaySequence gameplaySequence,
+        UIManager uiManager, FloatingTextService floatingTextService)
     {
         _currencyService = currencyService;
         _gameplaySequence = gameplaySequence;
@@ -48,7 +45,9 @@ public class GameManager : IDisposable
     internal void LateUpdate()
     {
         if (!_gameplayStarted)
+        {
             return;
+        }
 
         _gameplayManager.LateUpdate();
         _uiManager.SetProgress(_gameplayManager.TravelledDistance, _gameplayManager.TargetDistance);
@@ -57,22 +56,20 @@ public class GameManager : IDisposable
     private void Play()
     {
         if (_hasStarted)
-            return;
-
-        _hasStarted = true;
-        if (_cutsceneManager != null)
         {
-            _cutsceneManager.Play();
             return;
         }
 
-        StartGameplay();
+        _hasStarted = true;
+        _cutsceneManager.Play();
     }
 
     public void StartGameplay()
     {
         if (_gameplayStarted)
+        {
             return;
+        }
 
         _gameplayStarted = true;
         _uiManager.ShowLaunch();
@@ -82,14 +79,18 @@ public class GameManager : IDisposable
     private void Pause()
     {
         if (!_gameplayStarted)
+        {
             return;
+        }
         _gameplayManager.PauseGameplay();
     }
 
     private void Continue()
     {
         if (!_gameplayStarted)
+        {
             return;
+        }
         _gameplayManager.ContinueGameplay();
     }
 

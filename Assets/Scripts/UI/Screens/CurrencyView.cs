@@ -43,8 +43,7 @@ namespace UI
 
         private void OnDestroy()
         {
-            if (_bank != null)
-                _bank.OnCurrencyChanged -= SetCurrency;
+            _bank.OnCurrencyChanged -= SetCurrency;
 
             _countTween?.Kill();
             _punchTween?.Kill();

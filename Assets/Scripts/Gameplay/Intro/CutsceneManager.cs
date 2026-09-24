@@ -1,4 +1,5 @@
 using System;
+using Gameplay.CameraLogic;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -7,19 +8,24 @@ namespace Gameplay.Intro
     [Serializable]
     public class CutsceneManager : IDisposable
     {
+        private enum State
+        {
+            Ready,
+            Playing,
+            Completed
+        }
+
         [SerializeField] private PlayableDirector _director;
         [SerializeField] private Animator _actor;
         [SerializeField] private CameraController _cameraController;
 
-        private bool _hasStarted;
-        private bool _hasCompleted;
+        private State _state;
 
         public event Action Completed;
 
         public void Initialize()
         {
-            _hasStarted = false;
-            _hasCompleted = false;
+            _state = State.Ready;
             _director.playOnAwake = false;
             _director.timeUpdateMode = DirectorUpdateMode.UnscaledGameTime;
             _director.extrapolationMode = DirectorWrapMode.None;
@@ -33,10 +39,12 @@ namespace Gameplay.Intro
 
         public void Play()
         {
-            if (_hasStarted)
+            if (_state != State.Ready)
+            {
                 return;
+            }
 
-            _hasStarted = true;
+            _state = State.Playing;
             _cameraController.ActivateGameplayCameraImmediately();
             _director.time = 0d;
             _director.Play();
@@ -49,10 +57,12 @@ namespace Gameplay.Intro
 
         private void HandleDirectorStopped(PlayableDirector director)
         {
-            if (!_hasStarted || _hasCompleted)
+            if (_state != State.Playing)
+            {
                 return;
+            }
 
-            _hasCompleted = true;
+            _state = State.Completed;
             _cameraController.ActivateGameplayCameraImmediately();
             Completed?.Invoke();
         }

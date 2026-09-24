@@ -55,8 +55,8 @@ namespace Gameplay.Entities.Enemies
 
         public float GetDeathSurroundRadius()
         {
-            return Mathf.Max(0f, _deathSurroundRadius
-                + Random.Range(-_deathSurroundRadiusJitter, _deathSurroundRadiusJitter));
+            return Mathf.Max(0f, _deathSurroundRadius +
+                Random.Range(-_deathSurroundRadiusJitter, _deathSurroundRadiusJitter));
         }
 
         public float GetSpawnInterval(float elapsedSeconds)
@@ -77,7 +77,9 @@ namespace Gameplay.Entities.Enemies
         public float GetLaneOffset(int laneIndex)
         {
             if (LaneCount == 1)
+            {
                 return 0f;
+            }
 
             float t = laneIndex / (LaneCount - 1f);
             float laneCenter = Mathf.Lerp(-_enemy.RoadHalfWidth, _enemy.RoadHalfWidth, t);
