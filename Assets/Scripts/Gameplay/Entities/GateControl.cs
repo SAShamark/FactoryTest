@@ -15,8 +15,7 @@ namespace Gameplay.Entities
 
         private void Awake()
         {
-            if (_door != null)
-                _closedLocalPosition = _door.localPosition;
+            _closedLocalPosition = _door.localPosition;
         }
 
         public void Open()
@@ -31,9 +30,6 @@ namespace Gameplay.Entities
 
         private void MoveDoor(Vector3 targetPosition, float duration, Ease ease)
         {
-            if (_door == null)
-                return;
-
             _doorTween?.Kill();
             _doorTween = _door.DOLocalMove(targetPosition, duration).SetEase(ease)
                 .SetLink(gameObject).OnComplete(() => _doorTween = null);

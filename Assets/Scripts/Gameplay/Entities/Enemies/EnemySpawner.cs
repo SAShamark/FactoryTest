@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gameplay.CameraLogic;
 using Gameplay.Entities.BaseUnit;
 using Services.ObjectPool;
 using UnityEngine;
@@ -20,11 +21,9 @@ namespace Gameplay.Entities.Enemies
         private readonly List<int> _availableLanes = new();
         private ObjectPool<EnemyControl> _enemyPool;
         private FloatingTextService _floatingTextService;
-        private bool _isInitialized;
         private bool _isSpawning;
         private bool _isInitialWavePending;
-        private bool _hasSpawnLimit;
-        private float _maxSpawnZ;
+        private float _maxSpawnZ = float.PositiveInfinity;
         private float _elapsedSeconds;
         private float _spawnTimer;
 
@@ -37,8 +36,10 @@ namespace Gameplay.Entities.Enemies
                 for (int i = 0; i < _aliveEnemies.Count; i++)
                 {
                     EnemyControl enemy = _aliveEnemies[i];
-                    if (enemy != null && enemy.gameObject.activeSelf && enemy.IsAlive)
+                    if (enemy.gameObject.activeSelf && enemy.IsAlive)
+                    {
                         return true;
+                    }
                 }
 
                 return false;
@@ -47,28 +48,27 @@ namespace Gameplay.Entities.Enemies
 
         public void Initialize(FloatingTextService floatingTextService)
         {
-            if (_isInitialized)
+            if (_enemyPool != null)
+            {
                 return;
+            }
 
             _floatingTextService = floatingTextService;
 
-            if (_config != null && _enemyPrefab != null)
-                _enemyPool = new ObjectPool<EnemyControl>(_enemyPrefab, _config.InitialPoolSize, _enemyContainer);
+            _enemyPool = new ObjectPool<EnemyControl>(_enemyPrefab, _config.InitialPoolSize, _enemyContainer);
 
-            _spawnTimer = _config != null ? _config.InitialDelay : 0f;
-            _isInitialized = true;
+            _spawnTimer = _config.InitialDelay;
         }
 
         internal void LateUpdate()
         {
-            if (_config == null || _target == null || _enemyPool == null)
-                return;
-
             CleanupInactiveEnemies();
             DespawnEnemiesBehindTarget();
 
             if (!_isSpawning)
+            {
                 return;
+            }
 
             if (HasNoSpawnSpace())
             {
@@ -89,7 +89,7 @@ namespace Gameplay.Entities.Enemies
                 DespawnAllEnemies();
             }
 
-            _spawnTimer = _config != null ? _config.InitialDelay : 0f;
+            _spawnTimer = _config.InitialDelay;
             _isSpawning = true;
         }
 
@@ -101,7 +101,6 @@ namespace Gameplay.Entities.Enemies
         public void SetSpawnLimit(float finishZ, float safeZoneDistance)
         {
             _maxSpawnZ = finishZ - Mathf.Max(0f, safeZoneDistance);
-            _hasSpawnLimit = true;
         }
 
         public void StopAndDespawnAllEnemies()
@@ -116,8 +115,10 @@ namespace Gameplay.Entities.Enemies
             CleanupInactiveEnemies();
 
             int enemyCount = _aliveEnemies.Count;
-            if (enemyCount == 0 || _target == null || _config == null)
+            if (enemyCount == 0)
+            {
                 return;
+            }
 
             float angleStep = 360f / enemyCount;
             float angleOffset = Random.Range(0f, 360f);
@@ -133,8 +134,10 @@ namespace Gameplay.Entities.Enemies
 
         private bool HasNoSpawnSpace()
         {
-            if (!_hasSpawnLimit)
+            if (float.IsPositiveInfinity(_maxSpawnZ))
+            {
                 return false;
+            }
 
             return _target.position.z + _config.MinimumSpawnAheadDistance >= _maxSpawnZ;
         }
@@ -143,7 +146,9 @@ namespace Gameplay.Entities.Enemies
         {
             _spawnTimer -= Time.deltaTime;
             if (_spawnTimer > 0f)
+            {
                 return;
+            }
 
             SpawnNextEnemy();
             _spawnTimer += _config.GetSpawnInterval(_elapsedSeconds);
@@ -153,16 +158,22 @@ namespace Gameplay.Entities.Enemies
         {
             int freeSlots = _config.GetMaxAliveEnemies(_elapsedSeconds) - _aliveEnemies.Count;
             if (freeSlots <= 0)
+            {
                 return;
+            }
 
             if (SpawnEnemy(_isInitialWavePending))
+            {
                 _isInitialWavePending = false;
+            }
         }
 
         private bool SpawnEnemy(bool isInitialWave)
         {
             if (!TryGetSpawnPosition(isInitialWave, out Vector3 position))
+            {
                 return false;
+            }
 
             EnemyControl enemy = _enemyPool.GetFreeElement();
             Quaternion rotation = Quaternion.Euler(0f, _config.EnemyYaw, 0f);
@@ -189,20 +200,21 @@ namespace Gameplay.Entities.Enemies
             float z = _target.position.z + spawnDistance;
 
             if (!isInitialWave)
-                z += Random.Range(-_config.SpawnDistanceJitter, _config.SpawnDistanceJitter);
-
-            float maxSpawnZ = float.PositiveInfinity;
-
-            if (_hasSpawnLimit)
             {
-                maxSpawnZ = _maxSpawnZ;
-                z = Mathf.Min(z, maxSpawnZ);
+                z += Random.Range(-_config.SpawnDistanceJitter, _config.SpawnDistanceJitter);
+            }
+
+            if (!float.IsPositiveInfinity(_maxSpawnZ))
+            {
+                z = Mathf.Min(z, _maxSpawnZ);
             }
 
             position = new Vector3(x, _config.SpawnY, z);
 
-            if (!TryGetHiddenSpawnZ(position, maxSpawnZ, out float hiddenZ))
+            if (!TryGetHiddenSpawnZ(position, _maxSpawnZ, out float hiddenZ))
+            {
                 return false;
+            }
 
             position.z = hiddenZ;
             return true;
@@ -212,10 +224,7 @@ namespace Gameplay.Entities.Enemies
         {
             hiddenZ = position.z;
 
-            Camera viewCamera = _cameraController != null ? _cameraController.OutputCamera : null;
-            if (viewCamera == null)
-                return true;
-
+            Camera viewCamera = _cameraController.OutputCamera;
             float padding = _config.SpawnViewportPadding;
             Vector3 viewportPosition = viewCamera.WorldToViewportPoint(position);
 
@@ -224,18 +233,24 @@ namespace Gameplay.Entities.Enemies
                              && viewportPosition.y >= -padding && viewportPosition.y <= 1f + padding;
 
             if (!isVisible)
+            {
                 return true;
+            }
 
             Ray topEdgeRay = viewCamera.ViewportPointToRay(
                 new Vector3(Mathf.Clamp01(viewportPosition.x), 1f + padding, 0f));
             Plane spawnPlane = new Plane(Vector3.up, position);
 
             if (!spawnPlane.Raycast(topEdgeRay, out float distance))
+            {
                 return false;
+            }
 
             float z = topEdgeRay.GetPoint(distance).z;
             if (z <= position.z || z > maxSpawnZ)
+            {
                 return false;
+            }
 
             hiddenZ = z;
             return true;
@@ -244,7 +259,9 @@ namespace Gameplay.Entities.Enemies
         private int TakeRandomLane()
         {
             if (_availableLanes.Count == 0)
+            {
                 RefillLaneBag();
+            }
 
             int index = Random.Range(0, _availableLanes.Count);
             int lane = _availableLanes[index];
@@ -266,11 +283,15 @@ namespace Gameplay.Entities.Enemies
             for (int i = _aliveEnemies.Count - 1; i >= 0; i--)
             {
                 EnemyControl enemy = _aliveEnemies[i];
-                if (enemy == null || !enemy.gameObject.activeSelf)
+                if (!enemy.gameObject.activeSelf)
+                {
                     continue;
+                }
 
                 if (enemy.transform.position.z < despawnZ)
+                {
                     enemy.Despawn();
+                }
             }
         }
 
@@ -279,8 +300,10 @@ namespace Gameplay.Entities.Enemies
             for (int i = _aliveEnemies.Count - 1; i >= 0; i--)
             {
                 EnemyControl enemy = _aliveEnemies[i];
-                if (enemy == null || !enemy.gameObject.activeSelf)
+                if (!enemy.gameObject.activeSelf)
+                {
                     _aliveEnemies.RemoveAt(i);
+                }
             }
         }
 
@@ -289,8 +312,10 @@ namespace Gameplay.Entities.Enemies
             for (int i = _aliveEnemies.Count - 1; i >= 0; i--)
             {
                 EnemyControl enemy = _aliveEnemies[i];
-                if (enemy != null && enemy.gameObject.activeSelf)
+                if (enemy.gameObject.activeSelf)
+                {
                     enemy.Despawn();
+                }
             }
 
             _aliveEnemies.Clear();

@@ -35,12 +35,16 @@ namespace Gameplay.Entities
 
         private void Update()
         {
-            if (!_isRecycling || _segments == null)
+            if (!_isRecycling)
+            {
                 return;
+            }
 
             Transform rearmost = _segments[_rearIndex];
             if (_target.position.z - rearmost.position.z < _segmentLength)
+            {
                 return;
+            }
 
             rearmost.position += Vector3.forward * (_segmentCount * _segmentLength);
             _rearIndex = (_rearIndex + 1) % _segmentCount;
@@ -52,7 +56,7 @@ namespace Gameplay.Entities
             return new Vector3(origin.x, origin.y, z);
         }
 
-        private static float MeasureLength(Transform segment)
+        private float MeasureLength(Transform segment)
         {
             Renderer[] renderers = segment.GetComponentsInChildren<Renderer>();
 

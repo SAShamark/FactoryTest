@@ -3,7 +3,7 @@ using Unity.Cinemachine;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Gameplay
+namespace Gameplay.CameraLogic
 {
     [Serializable]
     public class CameraShake 
@@ -31,12 +31,8 @@ namespace Gameplay
             foreach (CinemachineCamera listeningCamera in listeningCameras)
                 ConfigureListener(listeningCamera);
 
-            _damageImpulse = CreateImpulse(
-                CinemachineImpulseDefinition.ImpulseShapes.Recoil,
-                _damageDuration);
-            _deathImpulse = CreateImpulse(
-                CinemachineImpulseDefinition.ImpulseShapes.Explosion,
-                _deathDuration);
+            _damageImpulse = CreateImpulse(CinemachineImpulseDefinition.ImpulseShapes.Recoil, _damageDuration);
+            _deathImpulse = CreateImpulse(CinemachineImpulseDefinition.ImpulseShapes.Explosion, _deathDuration);
         }
 
         public void PlayDamage(Vector3 hitPosition, Vector3 targetPosition)
@@ -47,16 +43,13 @@ namespace Gameplay
 
         public void PlayDeath(Vector3 position)
         {
-            Vector3 direction = new Vector3(
-                Random.Range(-DeathHorizontalSpread, DeathHorizontalSpread),
-                -1f,
+            Vector3 direction = new Vector3(Random.Range(-DeathHorizontalSpread, DeathHorizontalSpread), -1f,
                 Random.Range(-DeathHorizontalSpread, DeathHorizontalSpread)).normalized;
 
             _deathImpulse.CreateEvent(position, direction * _deathStrength);
         }
 
-        private static CinemachineImpulseDefinition CreateImpulse(
-            CinemachineImpulseDefinition.ImpulseShapes shape,
+        private CinemachineImpulseDefinition CreateImpulse(CinemachineImpulseDefinition.ImpulseShapes shape,
             float duration)
         {
             return new CinemachineImpulseDefinition
@@ -68,14 +61,13 @@ namespace Gameplay
             };
         }
 
-        private static void ConfigureListener(CinemachineCamera listeningCamera)
+        private void ConfigureListener(CinemachineCamera listeningCamera)
         {
-            if (listeningCamera == null)
-                return;
-
             CinemachineImpulseListener listener = listeningCamera.GetComponent<CinemachineImpulseListener>();
             if (listener == null)
+            {
                 listener = listeningCamera.gameObject.AddComponent<CinemachineImpulseListener>();
+            }
 
             listener.ApplyAfter = CinemachineCore.Stage.Noise;
             listener.ChannelMask = ImpulseChannel;
@@ -84,13 +76,15 @@ namespace Gameplay
             listener.SignalCombinationMode = CinemachineImpulseListener.SignalCombinationModes.Additive;
         }
 
-        private static Vector3 GetImpactDirection(Vector3 hitPosition, Vector3 targetPosition)
+        private Vector3 GetImpactDirection(Vector3 hitPosition, Vector3 targetPosition)
         {
             Vector3 direction = targetPosition - hitPosition;
             direction.y = DamageDownwardBias;
 
             if (direction.sqrMagnitude < 0.001f)
+            {
                 direction = Vector3.down;
+            }
 
             direction += Random.insideUnitSphere * DamageRandomness;
             return direction.normalized;

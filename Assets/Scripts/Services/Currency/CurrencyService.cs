@@ -18,9 +18,7 @@ namespace Services.Currency
         {
             _storageService = storageService;
             CurrencyCollection = currencyCollection;
-            _savedCurrencies = _storageService.LoadData(
-                    StorageConstants.CURRENCIES,
-                    new Dictionary<string, int>())
+            _savedCurrencies = _storageService.LoadData(StorageConstants.CURRENCIES, new Dictionary<string, int>())
                 ?? new Dictionary<string, int>();
             AddAllCurrencyBanks();
         }
@@ -73,7 +71,9 @@ namespace Services.Currency
                 bank.OnNotEnough -= NotEnoughCurrency;
 
                 if (_saveHandlers.TryGetValue(currencyType, out Action<int> saveHandler))
+                {
                     bank.OnCurrencyChanged -= saveHandler;
+                }
             }
 
             _saveHandlers.Clear();

@@ -24,22 +24,21 @@ namespace Gameplay.Entities.Character
 
             _remainingLifetime -= Time.deltaTime;
             if (_remainingLifetime <= 0f)
+            {
                 ReturnToPool();
+            }
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            EnemyControl enemy = other.GetComponentInParent<EnemyControl>();
-            if (enemy != null)
-                enemy.Hit(_damage, transform.position);
+            other.GetComponentInParent<EnemyControl>()?.Hit(_damage, transform.position);
 
             ReturnToPool();
         }
 
         private void ReturnToPool()
         {
-            if (TryGetComponent(out BasePoolDestroyable poolDestroyable))
-                poolDestroyable.DestroyObject();
+            GetComponent<BasePoolDestroyable>().DestroyObject();
         }
     }
 }

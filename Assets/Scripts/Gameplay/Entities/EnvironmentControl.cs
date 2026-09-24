@@ -12,8 +12,8 @@ namespace Gameplay.Entities
 
         private GateControl _finishGate;
 
-        public float FinishCenterX => _end != null ? _end.position.x : 0f;
-        public float FinishZ => _end != null ? _end.position.z : 0f;
+        public float FinishCenterX => _end.position.x;
+        public float FinishZ => _end.position.z;
 
         public void Initialize(float levelDistance)
         {
@@ -24,7 +24,7 @@ namespace Gameplay.Entities
 
         public void OpenFinishGate()
         {
-            _finishGate?.Open();
+            _finishGate.Open();
         }
 
         public void OpenFinishGateWithVictoryEffects()
@@ -35,21 +35,18 @@ namespace Gameplay.Entities
 
         public void CloseFinishGate()
         {
-            _finishGate?.Close();
+            _finishGate.Close();
         }
 
         public void StopGroundRecycling()
         {
-            _groundControl?.StopRecycling();
+            _groundControl.StopRecycling();
         }
 
         public void PlayVictoryEffects()
         {
             foreach (ParticleSystem effect in _victoryEffects)
             {
-                if (effect == null)
-                    continue;
-
                 effect.Play();
             }
         }

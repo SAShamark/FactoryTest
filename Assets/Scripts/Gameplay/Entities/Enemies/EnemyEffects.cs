@@ -44,12 +44,12 @@ namespace Gameplay.Entities.Enemies
 
         public void ShowDamage(float damage)
         {
-            _floatingText?.ShowDamage(damage, GetFloatingTextPosition());
+            _floatingText.ShowDamage(damage, GetFloatingTextPosition());
         }
 
         public void ShowReward()
         {
-            _floatingText?.ShowReward(GetFloatingTextPosition());
+            _floatingText.ShowReward(GetFloatingTextPosition());
         }
 
         public void PlayDeath(Action onComplete)
@@ -60,23 +60,17 @@ namespace Gameplay.Entities.Enemies
             Vector3 targetPosition = transform.position + sideDirection * _deathJumpDistance;
 
             Sequence sequence = DOTween.Sequence();
-            sequence.Join(transform.DOJump(
-                    targetPosition,
-                    _deathJumpHeight,
-                    1,
-                    _deathDuration)
+            sequence.Join(transform.DOJump(targetPosition, _deathJumpHeight, 1, _deathDuration)
                 .SetEase(Ease.OutQuad));
-            sequence.Insert(
-                _deathDuration * 0.35f,
-                transform.DOScale(_defaultScale * _deathEndScale, _deathDuration * 0.65f)
-                    .SetEase(Ease.InBack));
+            sequence.Insert(_deathDuration * 0.35f,
+                transform.DOScale(_defaultScale * _deathEndScale, _deathDuration * 0.65f).SetEase(Ease.InBack));
 
             _deathTween = sequence
                 .SetLink(gameObject)
                 .OnComplete(() =>
                 {
                     _deathTween = null;
-                    onComplete?.Invoke();
+                    onComplete();
                 });
         }
 

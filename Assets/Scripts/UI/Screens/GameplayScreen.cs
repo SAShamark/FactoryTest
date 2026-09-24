@@ -48,7 +48,9 @@ namespace UI
 
             int percent = Mathf.FloorToInt(normalizedProgress * 100f);
             if (percent == _displayedPercent)
+            {
                 return;
+            }
 
             _displayedPercent = percent;
             _progressText.text = $"{percent}%";

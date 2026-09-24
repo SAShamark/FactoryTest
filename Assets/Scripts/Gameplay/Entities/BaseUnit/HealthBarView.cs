@@ -99,12 +99,13 @@ namespace Gameplay.Entities.BaseUnit
             _healthSequence = DOTween.Sequence();
             _healthSequence.Insert(0f,
                 _healthFill.DOFillAmount(targetFill, _healthFillDuration).SetEase(Ease.OutQuad));
-            _healthSequence.Insert(0f, _healthFill.transform.DOScale(_healthFillDefaultScale * _hitPunchScale,
-                _hitPunchDuration * 0.5f).SetEase(Ease.OutBack));
-            _healthSequence.Insert(_hitPunchDuration * 0.5f, _healthFill.transform.DOScale(_healthFillDefaultScale,
-                _hitPunchDuration * 0.5f).SetEase(Ease.OutQuad));
-            _healthSequence.Insert(_damageDelay,
-                _damageFill.DOFillAmount(targetFill, _damageFillDuration).SetEase(Ease.OutCubic));
+            _healthSequence.Insert(0f,
+                _healthFill.transform.DOScale(_healthFillDefaultScale * _hitPunchScale, _hitPunchDuration * 0.5f)
+                    .SetEase(Ease.OutBack));
+            _healthSequence.Insert(_hitPunchDuration * 0.5f,
+                _healthFill.transform.DOScale(_healthFillDefaultScale, _hitPunchDuration * 0.5f).SetEase(Ease.OutQuad));
+            _healthSequence.Insert(_damageDelay, _damageFill.DOFillAmount(targetFill, _damageFillDuration)
+                .SetEase(Ease.OutCubic));
             _healthSequence.SetLink(gameObject);
         }
 

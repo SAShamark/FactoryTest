@@ -36,13 +36,17 @@ namespace Gameplay.Entities.Enemies
             toDestination.y = 0f;
 
             if (toDestination.sqrMagnitude > SurroundArrivalSqrDistance)
+            {
                 return Move(body, toDestination, _config.MoveSpeed);
+            }
 
             Vector3 lookDirection = lookAtPosition - body.position;
             lookDirection.y = 0f;
 
             if (lookDirection.sqrMagnitude > ArrivalSqrDistance)
+            {
                 RotateTowards(body, lookDirection);
+            }
 
             return false;
         }
@@ -52,10 +56,14 @@ namespace Gameplay.Entities.Enemies
             _wanderTimer -= Time.deltaTime;
 
             if (_isWandering)
+            {
                 return ContinueWander(body);
+            }
 
             if (_wanderTimer <= 0f)
+            {
                 BeginWander(body);
+            }
 
             return false;
         }
@@ -84,7 +92,9 @@ namespace Gameplay.Entities.Enemies
             float targetX = Mathf.Clamp(body.position.x + direction * distance, -bound, bound);
 
             if (Mathf.Abs(targetX - body.position.x) < 0.1f)
+            {
                 targetX = Mathf.Clamp(body.position.x - direction * distance, -bound, bound);
+            }
 
             _wanderDestination = new Vector3(targetX, body.position.y, body.position.z);
             _wanderTimer = moveDuration;
@@ -94,7 +104,9 @@ namespace Gameplay.Entities.Enemies
         private bool Move(Transform body, Vector3 toTarget, float speed)
         {
             if (toTarget.sqrMagnitude <= ArrivalSqrDistance)
+            {
                 return false;
+            }
 
             Vector3 direction = toTarget.normalized;
             body.position += direction * (speed * Time.deltaTime);
@@ -105,9 +117,7 @@ namespace Gameplay.Entities.Enemies
         private void RotateTowards(Transform body, Vector3 direction)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
-            body.rotation = Quaternion.RotateTowards(
-                body.rotation,
-                targetRotation,
+            body.rotation = Quaternion.RotateTowards(body.rotation, targetRotation,
                 _config.RotationSpeed * Time.deltaTime);
         }
     }

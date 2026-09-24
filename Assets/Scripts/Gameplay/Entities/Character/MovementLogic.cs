@@ -6,24 +6,29 @@ namespace Gameplay.Entities.Character
     [Serializable]
     public class MovementLogic
     {
+        private enum AlignmentState
+        {
+            Wandering,
+            Aligning,
+            Aligned
+        }
+
         [SerializeField] private float _speed = 8f;
         [SerializeField] private float _swayAmplitude = 3f;
         [SerializeField] private float _swayFrequency = 0.04f;
         [SerializeField, Min(0f)] private float _rotationResponsiveness = 18f;
 
-        private float _distance;
         private float _lateral;
-        private bool _isFinishAlignmentActive;
-        private bool _isFinishAligned;
+        private AlignmentState _alignmentState;
         private float _alignmentStartDistance;
         private float _alignmentDistance;
         private float _alignmentTargetX;
 
-        public float Distance => _distance;
+        public float Distance { get; private set; }
 
         public void Tick(Transform body, float deltaTime)
         {
-            _distance += _speed * deltaTime;
+            Distance += _speed * deltaTime;
 
             float targetX = GetTargetX();
 
@@ -39,35 +44,37 @@ namespace Gameplay.Entities.Character
 
         public void BeginFinishAlignment(float targetX, float alignmentDistance)
         {
-            if (_isFinishAlignmentActive || _isFinishAligned)
+            if (_alignmentState != AlignmentState.Wandering)
+            {
                 return;
+            }
 
-            _isFinishAlignmentActive = true;
-            _alignmentStartDistance = _distance;
+            _alignmentState = AlignmentState.Aligning;
+            _alignmentStartDistance = Distance;
             _alignmentDistance = Mathf.Max(0.01f, alignmentDistance);
             _alignmentTargetX = targetX;
         }
 
         private float GetTargetX()
         {
-            if (_isFinishAligned)
+            if (_alignmentState == AlignmentState.Aligned)
+            {
                 return _alignmentTargetX;
+            }
 
-            if (!_isFinishAlignmentActive)
+            if (_alignmentState == AlignmentState.Wandering)
             {
                 _lateral = SampleLateral();
                 return _lateral;
             }
 
-            float progress = Mathf.Clamp01(
-                (_distance - _alignmentStartDistance) / _alignmentDistance);
+            float progress = Mathf.Clamp01((Distance - _alignmentStartDistance) / _alignmentDistance);
             float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
             float targetX = Mathf.Lerp(SampleLateral(), _alignmentTargetX, easedProgress);
 
             if (progress >= 1f)
             {
-                _isFinishAlignmentActive = false;
-                _isFinishAligned = true;
+                _alignmentState = AlignmentState.Aligned;
                 targetX = _alignmentTargetX;
             }
 
@@ -76,7 +83,7 @@ namespace Gameplay.Entities.Character
 
         private float SampleLateral()
         {
-            float noiseCoordinate = _distance * _swayFrequency;
+            float noiseCoordinate = Distance * _swayFrequency;
             float noise = Mathf.PerlinNoise(noiseCoordinate, 0f) * 2f - 1f;
 
             float fadeIn = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(noiseCoordinate));

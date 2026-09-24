@@ -1,8 +1,6 @@
 using Gameplay.Entities.BaseUnit;
-using Services.Sequence;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Zenject;
 
 namespace Gameplay.Entities.Character
 {
@@ -20,26 +18,21 @@ namespace Gameplay.Entities.Character
         private bool _isMoving;
         private bool _isShooting;
         private bool _hasAimInput;
-        private IGameplaySequence _gameplaySequence;
 
         public float TravelledDistance => _movementLogic.Distance;
 
-        [Inject]
-        private void Construct(IGameplaySequence gameplaySequence)
-        {
-            _gameplaySequence = gameplaySequence;
-        }
-
         private void Start()
         {
-            _turretShooter.Initialize(_gameplaySequence);
+            _turretShooter.Initialize();
             _turretAimLogic.Initialize(transform, _turret);
         }
 
         private void Update()
         {
             if (_isMoving)
+            {
                 _movementLogic.Tick(transform, Time.deltaTime);
+            }
 
             if (_isMoving && TryGetAimPoint(out Vector3 aimPoint))
             {
@@ -48,13 +41,17 @@ namespace Gameplay.Entities.Character
             }
 
             if (_hasAimInput)
+            {
                 _turretAimLogic.Tick(transform, _turret, Time.deltaTime);
+            }
         }
 
         private void LateUpdate()
         {
-            if (_isShooting)
+            if (_isShooting && Time.timeScale > 0f)
+            {
                 _turretShooter.LateUpdate();
+            }
         }
 
         public void StartMoving()
@@ -96,10 +93,14 @@ namespace Gameplay.Entities.Character
 
             Pointer pointer = Pointer.current;
             if (pointer == null)
+            {
                 return false;
+            }
 
             if (pointer is Touchscreen && !pointer.press.isPressed)
+            {
                 return false;
+            }
 
             if (pointer is Mouse mouse && !mouse.leftButton.isPressed
                 && mouse.delta.ReadValue().sqrMagnitude <= 0.001f)
@@ -108,7 +109,9 @@ namespace Gameplay.Entities.Character
             Ray ray = _camera.ScreenPointToRay(pointer.position.ReadValue());
             Plane aimPlane = new Plane(Vector3.up, _turret.position);
             if (!aimPlane.Raycast(ray, out float distance))
+            {
                 return false;
+            }
 
             aimPoint = ray.GetPoint(distance);
             return true;
